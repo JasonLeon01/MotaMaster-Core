@@ -40,13 +40,13 @@ class System:
         cls.current_scene = None
 
         cls.window = sfGraphics.RenderWindow(sfWindow.VideoMode(cls._real_size), cls._title)
-        view = sfGraphics.View(sfGraphics.FloatRect(sfSystem.Vector2f(0, 0), cls._size))
-        cls.window.set_view(view)
         ico_image = ResourceMgr.TextureMgr.system(Config.title_icon).copy_to_image()
         cls.window.set_icon(ico_image)
         ResourceMgr.TextureMgr.release_system(Config.title_icon)
         cls.window.set_framerate_limit(cls._frame_rate)
         cls.window.set_vertical_sync_enabled(cls._vertical_sync)
+        cls.window.clear(sfGraphics.Color.black())
+        cls.window.display()
 
         cls._font = []
         for font in Config.font_name:
@@ -59,11 +59,21 @@ class System:
 
     @classmethod
     def get_size(cls):
+        return cls._size
+
+    @classmethod
+    def get_real_size(cls):
         return cls._real_size
 
     @classmethod
     def get_scale(cls):
         return cls._scale
+
+    @classmethod
+    def set_scale(cls, scale: float):
+        cls._scale = scale
+        cls._real_size = (cls._size * cls._scale).to_uint()
+        cls.window.set_size(cls._real_size)
 
     @classmethod
     def get_title(cls):

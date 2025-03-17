@@ -12,6 +12,7 @@ class SceneBase:
 
     def main(self):
         self.on_start()
+        graphics.Graphics.transition()
 
         window = system.System.window
         while window.is_open():

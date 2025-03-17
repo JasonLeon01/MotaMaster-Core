@@ -1,7 +1,7 @@
 import bisect
 import os
 from typing import Dict, List, Tuple
-from PySFBoost import Animation, sfGraphics, Particle, Time
+from PySFBoost import Animation, sfGraphics, Particle, Time, sfSystem
 from . import system
 
 class GraphicsMgr:
@@ -53,29 +53,55 @@ class Graphics:
 
     _frame_count = 0
     _debug_text: sfGraphics.Text = None
-    _freeze_image: Tuple[sfGraphics.Texture, sfGraphics.Image] = None
+    _freeze_image: sfGraphics.Texture = None
+    _freeze_sprite: sfGraphics.Sprite = None
+
+    _canvas = None
+    _canvas_sprite = None
+    _transition: float = 0.0
+
+    @classmethod
+    def init(cls):
+        cls._canvas = sfGraphics.RenderTexture(system.System.get_size().to_uint())
+        cls._canvas_sprite = sfGraphics.Sprite(cls._canvas.get_texture())
+        cls._canvas.clear(sfGraphics.Color.black())
+        cls._canvas.display()
+        cls._freeze_image: sfGraphics.Texture = sfGraphics.Texture(system.System.get_size().to_uint())
+        cls._freeze_sprite: sfGraphics.Sprite = sfGraphics.Sprite(cls._freeze_image)
 
     @classmethod
     def update(cls, delta_time: float):
+        if cls._canvas_sprite.get_scale().x != system.System.get_scale():
+            scale = system.System.get_scale()
+            cls._canvas_sprite.set_scale(sfSystem.Vector2f(scale, scale))
+
         cls._frame_count += 1
-        system.System.window.clear(sfGraphics.Color.transparent())
-        if cls._freeze_image is not None:
-            _, sprite = cls._freeze_image
-            system.System.window.draw(sprite)
-        else:
-            graphics_z_list = cls.graphics_mgr.get_z_list()
-            animation_z_list = cls.animation_mgr.get_z_list()
-            particle_z_list = Particle.ParticleMgr.get_z_list()
-            z_list = sorted(set(graphics_z_list + animation_z_list + particle_z_list))
-            for z in z_list:
-                if z in graphics_z_list:
-                    cls.graphics_mgr.display(system.System.window, z)
-                if z in animation_z_list:
-                    cls.animation_mgr.display(system.System.window, z)
-                if z in particle_z_list:
-                    cls.particle_mgr.display(system.System.window, z)
+        cls._canvas.clear(sfGraphics.Color.transparent())
+        graphics_z_list = cls.graphics_mgr.get_z_list()
+        animation_z_list = cls.animation_mgr.get_z_list()
+        particle_z_list = cls.particle_mgr.get_z_list()
+        z_list = sorted(set(graphics_z_list + animation_z_list + particle_z_list))
+        for z in z_list:
+            if z in graphics_z_list:
+                cls.graphics_mgr.display(cls._canvas, z)
+            if z in animation_z_list:
+                cls.animation_mgr.display(cls._canvas, z)
+            if z in particle_z_list:
+                cls.particle_mgr.display(cls._canvas, z)
+
+        if cls._freeze_sprite is not None and cls._freeze_sprite.get_color().a > 0:
+            speed = 255 * cls._transition * delta_time
+            if cls._freeze_sprite.get_color().a - speed > 0:
+                cls._freeze_sprite.set_color(sfGraphics.Color(255, 255, 255, int(cls._freeze_sprite.get_color().a - speed)))
+            else:
+                cls._freeze_sprite.set_color(sfGraphics.Color(255, 255, 255, 0))
+            cls._canvas.draw(cls._freeze_sprite)
+
         if os.environ.get('DEBUG') == 'True':
-            cls.debug_info(system.System.window, delta_time)
+            cls.debug_info(cls._canvas, delta_time)
+
+        cls._canvas.display()
+        system.System.window.draw(cls._canvas_sprite)
 
     @classmethod
     def debug_info(cls, target: sfGraphics.RenderTarget, delta_time: float):
@@ -94,7 +120,9 @@ class Graphics:
 
     @classmethod
     def freeze(cls):
-        texture = sfGraphics.Texture()
-        texture.update(system.System.window)
-        cls._freeze_image = (texture, sfGraphics.Sprite(texture))
+        cls._freeze_image.update(cls._canvas.get_texture())
+        cls._freeze_sprite.set_color(sfGraphics.Color(255, 255, 255, 255))
 
+    @classmethod
+    def transition(cls, duration: float = 1.0):
+        cls._transition = duration

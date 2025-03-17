@@ -3,18 +3,17 @@ from scripts.core import *
 from scripts.scene import *
 
 def setup():
-    system.Config.init(['data/config/system.json', 'data/config/audio.json'])
+    system.Config.init(['data/configs/system.json', 'data/configs/audio.json'])
     system.System.init('mota.ini')
     Time.TimeMgr.init()
-
+    graphics.Graphics.init()
+    graphics.Graphics.freeze()
     system.System.current_scene = title.Scene()
 
 def clear():
     ResourceMgr.TextureMgr.clear()
     ResourceMgr.FontMgr.clear()
     ResourceMgr.AudioMgr.clear()
-    Particle.ParticleMgr.clear()
-    Animation.AnimationMgr.clear()
 
 def main():
     setup()
