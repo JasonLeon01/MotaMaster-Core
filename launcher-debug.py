@@ -13,17 +13,18 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger("GameLauncher")
+os.environ['DEBUG'] = 'True'
 
 def run_game_script(script_path):
     if not os.path.isfile(script_path):
-        logger.error(f"File '{script_path}' does not exist!")
+        logger.error("File %s does not exist!", script_path)
         return
 
     if not script_path.endswith('.py'):
-        logger.warning(f"'{script_path}' may not be a Python script.")
+        logger.warning("%s may not be a Python script.", script_path)
 
     try:
-        logger.info(f"Launching game script: {script_path}")
+        logger.info("Launching game script: %s", script_path)
         process = subprocess.Popen(
             [sys.executable, script_path],
             stdout=subprocess.PIPE,
@@ -40,7 +41,7 @@ def run_game_script(script_path):
         logger.info("Game script has finished execution.")
 
     except Exception as e:
-        logger.error(f"An unexpected error occurred: {e}")
+        logger.error("An unexpected error occurred: %s", e)
 
 if __name__ == "__main__":
     config = configparser.ConfigParser()

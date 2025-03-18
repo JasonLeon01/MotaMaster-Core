@@ -27,7 +27,7 @@ class System:
     def init(cls, inifile):
         iniconfig = configparser.ConfigParser()
         iniconfig.read(inifile)
-        cls._title = iniconfig['Mota'].get('Title', 'Mota')
+        cls._title = Config.title_name
         cls._scale = iniconfig['Mota'].getfloat('Scale')
         cls._frame_rate = iniconfig['Mota'].getint('FrameRate')
         cls._smooth = iniconfig['Mota'].getboolean('Smooth')
@@ -38,8 +38,9 @@ class System:
 
         cls._real_size = (cls._size * cls._scale).to_uint()
         cls.current_scene = None
-
-        cls.window = sfGraphics.RenderWindow(sfWindow.VideoMode(cls._real_size), cls._title)
+        context_settings = sfWindow.ContextSettings()
+        context_settings.antiAliasingLevel = 8
+        cls.window = sfGraphics.RenderWindow(sfWindow.VideoMode(cls._real_size), cls._title, sfWindow.Style.Titlebar | sfWindow.Style.Close, settings=context_settings)
         ico_image = ResourceMgr.TextureMgr.system(Config.title_icon).copy_to_image()
         cls.window.set_icon(ico_image)
         ResourceMgr.TextureMgr.release_system(Config.title_icon)
@@ -58,15 +59,15 @@ class System:
         print('System initialized successfully.')
 
     @classmethod
-    def get_size(cls):
+    def get_size(cls) -> sfSystem.Vector2f:
         return cls._size
 
     @classmethod
-    def get_real_size(cls):
+    def get_real_size(cls) -> sfSystem.Vector2u:
         return cls._real_size
 
     @classmethod
-    def get_scale(cls):
+    def get_scale(cls) -> float:
         return cls._scale
 
     @classmethod
@@ -76,7 +77,7 @@ class System:
         cls.window.set_size(cls._real_size)
 
     @classmethod
-    def get_title(cls):
+    def get_title(cls) -> str:
         return cls._title
 
     @classmethod
@@ -85,11 +86,11 @@ class System:
         cls.window.set_title(title)
 
     @classmethod
-    def get_font(cls):
+    def get_font(cls) -> List[sfGraphics.Font]:
         return cls._font
 
     @classmethod
-    def get_frame_rate(cls):
+    def get_frame_rate(cls) -> int:
         return cls._frame_rate
 
     @classmethod
@@ -98,7 +99,11 @@ class System:
         cls.window.set_framerate_limit(frame_rate)
 
     @classmethod
-    def get_vertical_sync(cls):
+    def get_smooth(cls) -> bool:
+        return cls._smooth
+
+    @classmethod
+    def get_vertical_sync(cls) -> bool:
         return cls._vertical_sync
 
     @classmethod
@@ -107,7 +112,7 @@ class System:
         cls.window.set_vertical_sync_enabled(vertical_sync)
 
     @classmethod
-    def get_font_style_config(cls):
+    def get_font_style_config(cls) -> TextEnhance.EText.StyleConfig:
         return cls._font_style_config
 
     @classmethod
@@ -125,10 +130,11 @@ class System:
         return 0
 
 class Config:
+    title_name: str
     title_icon: str
     title_file: str
     title_bgm: str
-    font_name: str
+    font_name: List[str]
     font_size: int
     windowskin_file: str
     window_opacity: int
@@ -147,6 +153,7 @@ class Config:
     @classmethod
     def init(cls, files):
         config_sys = method.load_json_file(files[0])
+        cls.title_name = config_sys['title_name']
         cls.title_icon = config_sys['title_icon']
         cls.title_file = config_sys['title_file']
         cls.title_bgm = config_sys['title_bgm']

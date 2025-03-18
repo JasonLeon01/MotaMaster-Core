@@ -2,7 +2,7 @@ from functools import partial
 import logging, traceback
 from PySFBoost import Animation, Particle, sfGraphics
 from scripts.core.graphics import GraphicsMgr
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
 class Viewport(sfGraphics.Sprite):
     def __init__(self, rect: sfGraphics.IntRect):
@@ -34,9 +34,17 @@ class Viewport(sfGraphics.Sprite):
     def render_handle(self, delta_time: float):
         self.animation_mgr.update(delta_time)
         self.particle_mgr.update(delta_time)
-        self.graphics_mgr.display(self._canvas)
-        self.animation_mgr.display(self._canvas)
-        self.particle_mgr.display(self._canvas)
+        graphics_z_list = self.graphics_mgr.get_z_list()
+        animation_z_list = self.animation_mgr.get_z_list()
+        particle_z_list = self.particle_mgr.get_z_list()
+        z_list = sorted(set(graphics_z_list + animation_z_list + particle_z_list))
+        for z in z_list:
+            if z in graphics_z_list:
+                self.graphics_mgr.display(self._canvas, z)
+            if z in animation_z_list:
+                self.animation_mgr.display(self._canvas, z)
+            if z in particle_z_list:
+                self.particle_mgr.display(self._canvas, z)
 
     def __del__(self):
         self._executor.shutdown(wait=True)

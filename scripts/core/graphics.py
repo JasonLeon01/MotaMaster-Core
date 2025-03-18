@@ -1,6 +1,6 @@
 import bisect
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from PySFBoost import Animation, sfGraphics, Particle, Time, sfSystem
 from . import system
 
@@ -44,6 +44,8 @@ class GraphicsMgr:
         for z in z_list:
             if z in self._drawables:
                 for drawable in self._drawables[z]:
+                    if isinstance(drawable, sfGraphics.Sprite):
+                        drawable.get_texture().set_smooth(system.System.get_smooth())
                     target.draw(drawable)
 
 class Graphics:
@@ -101,6 +103,7 @@ class Graphics:
             cls.debug_info(cls._canvas, delta_time)
 
         cls._canvas.display()
+        cls._canvas.get_texture().set_smooth(system.System.get_smooth())
         system.System.window.draw(cls._canvas_sprite)
 
     @classmethod

@@ -16,7 +16,7 @@ class SceneBase:
 
         window = system.System.window
         while window.is_open():
-            input.Input.clear()
+            input.WindowInput.clear()
             while True:
                 event = window.poll_event()
                 if event is None:
@@ -24,47 +24,47 @@ class SceneBase:
                 if event.isClosed():
                     window.close()
                 if event.isFocusLost():
-                    input.Input.pause()
+                    input.WindowInput.pause()
                 if event.isFocusGained():
-                    input.Input.resume()
+                    input.WindowInput.resume()
                 if event.isTextEntered():
-                    input.Input.textEntered = event
+                    input.WindowInput.textEntered = event
                 if event.isKeyPressed():
-                    input.Input.keyPressed = event
+                    input.WindowInput.keyPressed = event
                 if event.isKeyReleased():
-                    input.Input.keyReleased = event
+                    input.WindowInput.keyReleased = event
                 if event.isMouseWheelScrolled():
-                    input.Input.mouseWheelScrolled = event
+                    input.WindowInput.mouseWheelScrolled = event
                 if event.isMouseButtonPressed():
-                    input.Input.mouseButtonPressed = event
+                    input.WindowInput.mouseButtonPressed = event
                 if event.isMouseButtonReleased():
-                    input.Input.mouseButtonReleased = event
+                    input.WindowInput.mouseButtonReleased = event
                 if event.isMouseMoved():
-                    input.Input.mouseMoved = event
+                    input.WindowInput.mouseMoved = event
                 if event.isMouseMovedRaw():
-                    input.Input.mouseMovedRaw = event
+                    input.WindowInput.mouseMovedRaw = event
                 if event.isMouseEntered():
-                    input.Input.mouseEntered = event
+                    input.WindowInput.mouseEntered = event
                 if event.isMouseLeft():
-                    input.Input.mouseLeft = event
+                    input.WindowInput.mouseLeft = event
                 if event.isJoystickButtonPressed():
-                    input.Input.joystickButtonPressed = event
+                    input.WindowInput.joystickButtonPressed = event
                 if event.isJoystickButtonReleased():
-                    input.Input.joystickButtonReleased = event
+                    input.WindowInput.joystickButtonReleased = event
                 if event.isJoystickMoved():
-                    input.Input.joystickMoved = event
+                    input.WindowInput.joystickMoved = event
                 if event.isJoystickConnected():
-                    input.Input.joystickConnected = event
+                    input.WindowInput.joystickConnected = event
                 if event.isJoystickDisconnected():
-                    input.Input.joystickDisconnected = event
+                    input.WindowInput.joystickDisconnected = event
                 if event.isTouchBegan():
-                    input.Input.touchBegan = event
+                    input.WindowInput.touchBegan = event
                 if event.isTouchMoved():
-                    input.Input.touchMoved = event
+                    input.WindowInput.touchMoved = event
                 if event.isTouchEnded():
-                    input.Input.touchEnded = event
-                if input.Input.is_paused():
-                    input.Input.clear()
+                    input.WindowInput.touchEnded = event
+                if input.WindowInput.is_paused():
+                    input.WindowInput.clear()
 
             Time.TimeMgr.update()
             delta_time = Time.TimeMgr.get_delta_time().as_seconds()
@@ -114,5 +114,4 @@ class SceneBase:
                 logging.error("Thread execution failed: %s\n%s", e, traceback.format_exc())
 
         system.System.window.display()
-        print("fps:", 1.0 / delta_time)
         self.on_late_update(delta_time)
