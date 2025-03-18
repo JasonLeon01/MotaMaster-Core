@@ -2,7 +2,6 @@ from functools import partial
 import traceback
 from PySFBoost import Animation, Particle, sfGraphics
 from scripts.core.graphics import GraphicsMgr
-from concurrent.futures import ThreadPoolExecutor
 
 class Viewport(sfGraphics.Sprite):
     def __init__(self, rect: sfGraphics.IntRect):
@@ -10,7 +9,6 @@ class Viewport(sfGraphics.Sprite):
         self.animation_mgr = Animation.AnimationMgr()
         self.particle_mgr = Particle.ParticleMgr()
         self._canvas = sfGraphics.RenderTexture(rect.size.to_uint())
-        self._executor = ThreadPoolExecutor(max_workers = 1)
 
         super().__init__(self._canvas.get_texture())
         self.set_position(rect.position.to_float())

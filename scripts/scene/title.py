@@ -33,7 +33,6 @@ class Scene(SceneBase):
             print("middle click")
         if self.window.cancel():
             print("cancel")
-        self.window.logic_handle(delta_time)
 
     def new_game(self):
         print("new game")

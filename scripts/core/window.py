@@ -285,8 +285,8 @@ class WindowChoice(WindowBase):
             # ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
             return
 
-    def render_handle(self, delta_time):
-        super().render_handle(delta_time)
+    def render(self, delta_time):
+        super().render(delta_time)
         if self.content is not None:
             origin = self.content.get_origin()
             size = self.get_local_bounds().size
