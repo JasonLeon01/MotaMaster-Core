@@ -58,8 +58,8 @@ class Graphics:
     _freeze_image: sfGraphics.Texture = None
     _freeze_sprite: sfGraphics.Sprite = None
 
-    _canvas = None
-    _canvas_sprite = None
+    _canvas: sfGraphics.RenderTexture = None
+    _canvas_sprite: sfGraphics.Sprite = None
     _transition: float = 0.0
 
     @classmethod
@@ -68,6 +68,7 @@ class Graphics:
         cls._canvas_sprite = sfGraphics.Sprite(cls._canvas.get_texture())
         cls._canvas.clear(sfGraphics.Color.black())
         cls._canvas.display()
+
         cls._freeze_image: sfGraphics.Texture = sfGraphics.Texture(system.System.get_size().to_uint())
         cls._freeze_sprite: sfGraphics.Sprite = sfGraphics.Sprite(cls._freeze_image)
 
@@ -110,15 +111,14 @@ class Graphics:
     def debug_info(cls, target: sfGraphics.RenderTarget, delta_time: float):
         import psutil
         if cls._debug_text is None:
-            cls._debug_text = sfGraphics.Text('')
-            cls._debug_text.set_font(system.System.get_font())
-            cls._debug_text.set_character_size(12)
+            cls._debug_text = sfGraphics.Text(system.System.get_font()[0], '', 12)
 
         fps = 1.0 / delta_time
-        average_fps = cls._frame_count / Time.TimeMgr.get_current_time()
+        average_fps = cls._frame_count / Time.TimeMgr.get_current_time().as_seconds()
 
-        text = f'FPS: {fps:.2f}\n\(Average FPS: {average_fps:.2f})\n Memory: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB'
+        text = f'FPS: {fps:.2f}\nAverage FPS: {average_fps:.2f}\nMemory: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB'
         cls._debug_text.set_string(text)
+        cls._debug_text.set_position(sfSystem.Vector2f(10, 10))
         target.draw(cls._debug_text)
 
     @classmethod
