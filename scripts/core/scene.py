@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 class SceneBase:
     def __init__(self):
         self._executor = ThreadPoolExecutor(max_workers = 2)
+        self._audio_interval = 0
 
     def main(self):
         self.on_start()
@@ -57,6 +58,9 @@ class SceneBase:
         graphics.Graphics.update(delta_time)
 
     def audio_handle(self, delta_time: float):
+        if self._audio_interval < 10:
+            self._audio_interval += delta_time
+            return
         AudioMgr.update()
 
     def update(self, delta_time: float):

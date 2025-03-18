@@ -257,7 +257,7 @@ class WindowChoice(WindowBase):
         if inputs.GameInput.repeat(sfWindow.Keyboard.Key.Up, 0.1, delta_time):
             if (self.column == 1 and inputs.GameInput.trigger(sfWindow.Keyboard.Key.Up)) or self.index >= self.column:
                 self.index = (self.index - self.column + len(self.items)) % len(self.items)
-                # ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
+                ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
                 return
         if inputs.GameInput.repeat(sfWindow.Keyboard.Key.Down, 0.1, delta_time):
             if (self.column == 1 and inputs.GameInput.trigger(sfWindow.Keyboard.Key.Down)) or self.index < len(self.items) - self.column:
@@ -267,22 +267,22 @@ class WindowChoice(WindowBase):
         if inputs.GameInput.repeat(sfWindow.Keyboard.Key.Left, 0.1, delta_time):
             if inputs.GameInput.trigger(sfWindow.Keyboard.Key.Left) or self.index > 0:
                 self.index = (self.index - 1 + len(self.items)) % len(self.items)
-                # ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
+                ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
                 return
         if inputs.GameInput.repeat(sfWindow.Keyboard.Key.Right, 0.1, delta_time):
             if inputs.GameInput.trigger(sfWindow.Keyboard.Key.Right) or self.index < len(self.items) - 1:
                 self.index = (self.index + 1) % len(self.items)
-                # ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
+                ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
                 return
 
     def _mouse_response(self, delta_time: float):
         if inputs.GameInput.wheel_up():
             self.index = (self.index - 1 + len(self.items)) % len(self.items)
-            # ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
+            ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
             return
         if inputs.GameInput.wheel_down():
             self.index = (self.index + 1) % len(self.items)
-            # ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
+            ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
             return
 
     def render_handle(self, delta_time):
