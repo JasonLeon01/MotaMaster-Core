@@ -30,7 +30,6 @@ class GameInput:
         if pressing:
             if key not in cls._keys_repeat or cls._keys_repeat[key] <= 0:
                 cls._keys_repeat[key] = interval
-                print("yes")
                 return True
             cls._keys_repeat[key] -= delta_time
         else:
