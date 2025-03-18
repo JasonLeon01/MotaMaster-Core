@@ -1,5 +1,5 @@
 from . import graphics
-from. import input
+from. import inputs
 from . import method
 from. import scene
 from . import system
@@ -8,7 +8,7 @@ from . import window
 
 __all__ = [
     'graphics',
-    'input',
+    'inputs',
     'method',
     'scene',
     'system',

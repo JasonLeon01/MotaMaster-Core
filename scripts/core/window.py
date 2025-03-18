@@ -1,7 +1,7 @@
 import math
 from typing import Any, Callable, Dict, List, Tuple
 from PySFBoost import ResourceMgr, sfGraphics, sfSystem, sfWindow, TextEnhance
-from . import viewport, system, input
+from . import viewport, system, inputs
 
 class Window(viewport.Viewport):
     def __init__(self, rect: sfGraphics.IntRect, asset: sfGraphics.Image = None, repeat: bool = False):
@@ -69,12 +69,10 @@ class Window(viewport.Viewport):
         self._render_sides()
         self.render_count = 0
 
-    def update(self, delta_time: float):
-        if self.content is not None:
-            self.content.update(delta_time)
-        super().update(delta_time)
-
     def render_handle(self, delta_time: float):
+        if self.content is not None:
+            self.content.render_handle(delta_time)
+            self.content.display()
         self._window_back_sprite.set_color(sfGraphics.Color(255, 255, 255, self.back_opacity))
         self._canvas.draw(self._window_back_sprite)
         self._canvas.draw(self._window_edge_sprite)
@@ -100,7 +98,6 @@ class Window(viewport.Viewport):
             self._rect_sprite.set_color(sfGraphics.Color(255, 255, 255, int(opacity)))
             self._canvas.draw(self._rect_sprite)
 
-        self._canvas.display()
         super().render_handle(delta_time)
 
     def set_rect(self, rect: sfGraphics.IntRect):
@@ -240,52 +237,52 @@ class WindowChoice(WindowBase):
         self.set_rect(sfGraphics.IntRect(sfSystem.Vector2i(x, y), sfSystem.Vector2i(self.get_cursor_width(), self.cursor_height)))
 
     def confirm(self):
-        if input.GameInput.trigger(sfWindow.Keyboard.Key.Enter) or input.GameInput.trigger(sfWindow.Keyboard.Key.Space):
+        if inputs.GameInput.trigger(sfWindow.Keyboard.Key.Enter) or inputs.GameInput.trigger(sfWindow.Keyboard.Key.Space):
             return True
         if self.mouse_in_rect():
             mouse_pos = self.mouse_in_local()
             if (mouse_pos.x >= 16 and mouse_pos.x <= self.get_local_bounds().size.x - 16 and mouse_pos.y >= 0 and mouse_pos.y <= self.cursor_height):
-                if input.GameInput.left_click():
+                if inputs.GameInput.left_click():
                     return True
         return False
 
     def cancel(self):
-        if input.GameInput.trigger(sfWindow.Keyboard.Key.Escape):
+        if inputs.GameInput.trigger(sfWindow.Keyboard.Key.Escape):
             return True
-        if input.GameInput.right_click():
+        if inputs.GameInput.right_click():
             return True
         return False
 
     def _key_response(self, delta_time: float):
-        if input.GameInput.repeat(sfWindow.Keyboard.Key.Up, 0.25, delta_time):
-            if (self.column == 1 and input.GameInput.trigger(sfWindow.Keyboard.Key.Up)) or self.index >= self.column:
+        if inputs.GameInput.repeat(sfWindow.Keyboard.Key.Up, 0.1, delta_time):
+            if (self.column == 1 and inputs.GameInput.trigger(sfWindow.Keyboard.Key.Up)) or self.index >= self.column:
                 self.index = (self.index - self.column + len(self.items)) % len(self.items)
-                ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
+                # ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
                 return
-        if input.GameInput.repeat(sfWindow.Keyboard.Key.Down, 0.25, delta_time):
-            if (self.column == 1 and input.GameInput.trigger(sfWindow.Keyboard.Key.Down)) or self.index < len(self.items) - self.column:
+        if inputs.GameInput.repeat(sfWindow.Keyboard.Key.Down, 0.1, delta_time):
+            if (self.column == 1 and inputs.GameInput.trigger(sfWindow.Keyboard.Key.Down)) or self.index < len(self.items) - self.column:
                 self.index = (self.index + self.column) % len(self.items)
                 ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
                 return
-        if input.GameInput.repeat(sfWindow.Keyboard.Key.Left, 0.25, delta_time):
-            if input.GameInput.trigger(sfWindow.Keyboard.Key.Left) or self.index > 0:
+        if inputs.GameInput.repeat(sfWindow.Keyboard.Key.Left, 0.1, delta_time):
+            if inputs.GameInput.trigger(sfWindow.Keyboard.Key.Left) or self.index > 0:
                 self.index = (self.index - 1 + len(self.items)) % len(self.items)
-                ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
+                # ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
                 return
-        if input.GameInput.repeat(sfWindow.Keyboard.Key.Right, 0.25, delta_time):
-            if input.GameInput.trigger(sfWindow.Keyboard.Key.Right) or self.index < len(self.items) - 1:
+        if inputs.GameInput.repeat(sfWindow.Keyboard.Key.Right, 0.1, delta_time):
+            if inputs.GameInput.trigger(sfWindow.Keyboard.Key.Right) or self.index < len(self.items) - 1:
                 self.index = (self.index + 1) % len(self.items)
-                ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
+                # ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
                 return
 
     def _mouse_response(self, delta_time: float):
-        if input.GameInput.wheel_up():
+        if inputs.GameInput.wheel_up():
             self.index = (self.index - 1 + len(self.items)) % len(self.items)
-            ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
+            # ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
             return
-        if input.GameInput.wheel_down():
+        if inputs.GameInput.wheel_down():
             self.index = (self.index + 1) % len(self.items)
-            ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
+            # ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
             return
 
     def render_handle(self, delta_time):

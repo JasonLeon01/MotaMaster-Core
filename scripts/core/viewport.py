@@ -1,5 +1,5 @@
 from functools import partial
-import logging, traceback
+import traceback
 from PySFBoost import Animation, Particle, sfGraphics
 from scripts.core.graphics import GraphicsMgr
 from concurrent.futures import ThreadPoolExecutor
@@ -24,7 +24,7 @@ class Viewport(sfGraphics.Sprite):
         try:
             logical_future.result()
         except Exception as e:
-            logging.error("Thread execution failed: %s\n%s", e, traceback.format_exc())
+            print(f"Thread execution failed: {e}\n{traceback.format_exc()}")
 
         self._canvas.display()
 
@@ -45,6 +45,12 @@ class Viewport(sfGraphics.Sprite):
                 self.animation_mgr.display(self._canvas, z)
             if z in particle_z_list:
                 self.particle_mgr.display(self._canvas, z)
+
+    def clear(self, color: sfGraphics.Color = sfGraphics.Color.transparent()):
+        self._canvas.clear(color)
+
+    def display(self):
+        self._canvas.display()
 
     def __del__(self):
         self._executor.shutdown(wait=True)

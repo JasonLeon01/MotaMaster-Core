@@ -1,7 +1,7 @@
 from functools import partial
 import logging
 import traceback
-from . import graphics, method, system, input
+from . import graphics, method, system, inputs
 import PySFBoost.Time as Time
 from PySFBoost.ResourceMgr import AudioMgr
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -15,56 +15,17 @@ class SceneBase:
         graphics.Graphics.transition()
 
         window = system.System.window
+        inputs.GameInput.wheel_delta = 0
         while window.is_open():
-            input.WindowInput.clear()
             while True:
                 event = window.poll_event()
                 if event is None:
                     break
                 if event.isClosed():
                     window.close()
-                if event.isFocusLost():
-                    input.WindowInput.pause()
-                if event.isFocusGained():
-                    input.WindowInput.resume()
-                if event.isTextEntered():
-                    input.WindowInput.textEntered = event
-                if event.isKeyPressed():
-                    input.WindowInput.keyPressed = event
-                if event.isKeyReleased():
-                    input.WindowInput.keyReleased = event
-                if event.isMouseWheelScrolled():
-                    input.WindowInput.mouseWheelScrolled = event
-                if event.isMouseButtonPressed():
-                    input.WindowInput.mouseButtonPressed = event
-                if event.isMouseButtonReleased():
-                    input.WindowInput.mouseButtonReleased = event
-                if event.isMouseMoved():
-                    input.WindowInput.mouseMoved = event
-                if event.isMouseMovedRaw():
-                    input.WindowInput.mouseMovedRaw = event
-                if event.isMouseEntered():
-                    input.WindowInput.mouseEntered = event
-                if event.isMouseLeft():
-                    input.WindowInput.mouseLeft = event
-                if event.isJoystickButtonPressed():
-                    input.WindowInput.joystickButtonPressed = event
-                if event.isJoystickButtonReleased():
-                    input.WindowInput.joystickButtonReleased = event
-                if event.isJoystickMoved():
-                    input.WindowInput.joystickMoved = event
-                if event.isJoystickConnected():
-                    input.WindowInput.joystickConnected = event
-                if event.isJoystickDisconnected():
-                    input.WindowInput.joystickDisconnected = event
-                if event.isTouchBegan():
-                    input.WindowInput.touchBegan = event
-                if event.isTouchMoved():
-                    input.WindowInput.touchMoved = event
-                if event.isTouchEnded():
-                    input.WindowInput.touchEnded = event
-                if input.WindowInput.is_paused():
-                    input.WindowInput.clear()
+                # if event.isMouseWheelScrolled():
+                #     wheel_event = event.getIfMouseWheelScrolled()
+                #     inputs.GameInput.wheel_delta = wheel_event.delta
 
             Time.TimeMgr.update()
             delta_time = Time.TimeMgr.get_delta_time().as_seconds()

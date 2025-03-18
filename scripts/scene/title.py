@@ -2,7 +2,7 @@ from scripts.core.scene import SceneBase
 from scripts.core.window import WindowCommand
 from scripts.core.graphics import Graphics
 from scripts.core.system import System
-from scripts.core.input import GameInput
+from scripts.core.inputs import GameInput
 from PySFBoost import sfSystem, sfGraphics, ResourceMgr, TextEnhance
 
 class Scene(SceneBase):
@@ -33,7 +33,7 @@ class Scene(SceneBase):
             print("middle click")
         if self.window.cancel():
             print("cancel")
-        super().logic_handle(delta_time)
+        self.window.logic_handle(delta_time)
 
     def new_game(self):
         print("new game")
