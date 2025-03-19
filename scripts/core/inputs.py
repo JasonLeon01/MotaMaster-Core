@@ -6,13 +6,18 @@ class GameInput:
 
     _mouse_pressing = [False, False, False, False, False]
     wheel_delta = 0
+    focused = True
 
     @classmethod
     def press(cls, key: sfWindow.Keyboard.Key) -> bool:
+        if not cls.focused:
+            return False
         return sfWindow.Keyboard.is_key_pressed(key)
 
     @classmethod
     def trigger(cls, key: sfWindow.Keyboard.Key) -> bool:
+        if not cls.focused:
+            return False
         if key not in cls._keys_hash:
             cls._keys_hash[key] = False
         pressing = sfWindow.Keyboard.is_key_pressed(key)
@@ -26,6 +31,8 @@ class GameInput:
 
     @classmethod
     def repeat(cls, key: sfWindow.Keyboard.Key, interval: float, delta_time: float) -> bool:
+        if not cls.focused:
+            return False
         pressing = sfWindow.Keyboard.is_key_pressed(key)
         if pressing:
             if key not in cls._keys_repeat or cls._keys_repeat[key] <= 0:
@@ -41,6 +48,8 @@ class GameInput:
 
     @classmethod
     def left_click(cls) -> bool:
+        if not cls.focused:
+            return False
         last = cls._mouse_pressing[0]
         cls._mouse_pressing[0] = sfWindow.Mouse.is_button_pressed(sfWindow.Mouse.Button.Left)
         if not last and cls._mouse_pressing[0]:
@@ -49,6 +58,8 @@ class GameInput:
 
     @classmethod
     def right_click(cls) -> bool:
+        if not cls.focused:
+            return False
         last = cls._mouse_pressing[1]
         cls._mouse_pressing[1] = sfWindow.Mouse.is_button_pressed(sfWindow.Mouse.Button.Right)
         if not last and cls._mouse_pressing[1]:
@@ -57,6 +68,8 @@ class GameInput:
 
     @classmethod
     def middle_click(cls) -> bool:
+        if not cls.focused:
+            return False
         last = cls._mouse_pressing[2]
         cls._mouse_pressing[2] = sfWindow.Mouse.is_button_pressed(sfWindow.Mouse.Button.Middle)
         if not last and cls._mouse_pressing[2]:
@@ -65,6 +78,8 @@ class GameInput:
 
     @classmethod
     def x1_click(cls) -> bool:
+        if not cls.focused:
+            return False
         last = cls._mouse_pressing[3]
         cls._mouse_pressing[3] = sfWindow.Mouse.is_button_pressed(sfWindow.Mouse.Button.Extra1)
         if not last and cls._mouse_pressing[3]:
@@ -73,6 +88,8 @@ class GameInput:
 
     @classmethod
     def x2_click(cls) -> bool:
+        if not cls.focused:
+            return False
         last = cls._mouse_pressing[4]
         cls._mouse_pressing[4] = sfWindow.Mouse.is_button_pressed(sfWindow.Mouse.Button.Extra2)
         if not last and cls._mouse_pressing[4]:
@@ -81,41 +98,57 @@ class GameInput:
 
     @classmethod
     def left_press(cls) -> bool:
+        if not cls.focused:
+            return False
         cls._mouse_pressing[0] = sfWindow.Mouse.is_button_pressed(sfWindow.Mouse.Button.Left)
         return cls._mouse_pressing[0]
 
     @classmethod
     def right_press(cls) -> bool:
+        if not cls.focused:
+            return False
         cls._mouse_pressing[1] = sfWindow.Mouse.is_button_pressed(sfWindow.Mouse.Button.Right)
         return cls._mouse_pressing[1]
 
     @classmethod
     def middle_press(cls) -> bool:
+        if not cls.focused:
+            return False
         cls._mouse_pressing[2] = sfWindow.Mouse.is_button_pressed(sfWindow.Mouse.Button.Middle)
         return cls._mouse_pressing[2]
 
     @classmethod
     def x1_press(cls) -> bool:
+        if not cls.focused:
+            return False
         cls._mouse_pressing[3] = sfWindow.Mouse.is_button_pressed(sfWindow.Mouse.Button.Extra1)
         return cls._mouse_pressing[3]
 
     @classmethod
     def x2_press(cls) -> bool:
+        if not cls.focused:
+            return False
         cls._mouse_pressing[4] = sfWindow.Mouse.is_button_pressed(sfWindow.Mouse.Button.Extra2)
         return cls._mouse_pressing[4]
 
     @classmethod
     def wheel_up(cls) -> bool:
-        # if cls.wheel_delta < 0:
-        #     return True
+        if not cls.focused:
+            return False
+        if cls.wheel_delta > 0:
+            return True
         return False
 
     @classmethod
     def wheel_down(cls) -> bool:
-        # if cls.wheel_delta > 0:
-        #     return True
+        if not cls.focused:
+            return False
+        if cls.wheel_delta < 0:
+            return True
         return False
 
     @classmethod
     def joystick_press(cls, joystick_id: int, button: int) -> bool:
+        if not cls.focused:
+            return False
         return sfWindow.Joystick.is_button_pressed(joystick_id, button)

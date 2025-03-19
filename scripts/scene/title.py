@@ -13,6 +13,8 @@ class Scene(SceneBase):
             (WindowCommand.from_str("加载游戏", sfSystem.Vector2u(288, 32)), self.load_game),
             (WindowCommand.from_str("退出", sfSystem.Vector2u(288, 32)), self.exit_game),
         ])
+        self.window.set_origin(sfSystem.Vector2f(160, 64))
+        self.window.set_position(sfSystem.Vector2f(320, 240))
         super().__init__()
 
     def on_start(self):
@@ -21,18 +23,8 @@ class Scene(SceneBase):
 
     def render_handle(self, delta_time):
         self.window.update(delta_time)
-        #self.window.rotate(sfSystem.Angle.degrees(1))
+        self.window.rotate(sfSystem.Angle.degrees(1))
         super().render_handle(delta_time)
-
-    def logic_handle(self, delta_time):
-        if GameInput.left_click():
-            print("left click")
-        if GameInput.right_click():
-            print("right click")
-        if GameInput.middle_click():
-            print("middle click")
-        if self.window.cancel():
-            print("cancel")
 
     def new_game(self):
         print("new game")

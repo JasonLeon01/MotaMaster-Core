@@ -2,7 +2,8 @@ from functools import partial
 import logging
 import traceback
 from . import graphics, method, system, inputs
-import PySFBoost.Time as Time
+from PySFBoost.sfWindow import Event
+from PySFBoost.Time import TimeMgr
 from PySFBoost.ResourceMgr import AudioMgr
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -16,20 +17,29 @@ class SceneBase:
         graphics.Graphics.transition()
 
         window = system.System.window
-        inputs.GameInput.wheel_delta = 0
         while window.is_open():
-            while True:
-                event = window.poll_event()
-                if event is None:
-                    break
-                if event.isClosed():
-                    window.close()
-                # if event.isMouseWheelScrolled():
-                #     wheel_event = event.getIfMouseWheelScrolled()
-                #     inputs.GameInput.wheel_delta = wheel_event.delta
+            inputs.GameInput.wheel_delta = 0
+            event: Event = None
+            try:
+                while True:
+                    event = window.poll_event()
+                    if event is None:
+                        break
+                    if event.isClosed():
+                        window.close()
+                    if event.isFocusLost():
+                        inputs.GameInput.focused = False
+                    if event.isFocusGained():
+                        inputs.GameInput.focused = True
+                    if event.isMouseWheelScrolled():
+                        wheel_event = event.getIfMouseWheelScrolled()
+                        if wheel_event is not None:
+                            inputs.GameInput.wheel_delta = wheel_event.delta
+            except Exception as e:
+                logging.error("Window execution failed: %s\n%s", e, traceback.format_exc())
 
-            Time.TimeMgr.update()
-            delta_time = Time.TimeMgr.get_delta_time().as_seconds()
+            TimeMgr.update()
+            delta_time = TimeMgr.get_delta_time().as_seconds()
             self.update(delta_time)
 
             if system.System.current_scene != self:
@@ -58,9 +68,6 @@ class SceneBase:
         graphics.Graphics.update(delta_time)
 
     def audio_handle(self, delta_time: float):
-        if self._audio_interval < 10:
-            self._audio_interval += delta_time
-            return
         AudioMgr.update()
 
     def update(self, delta_time: float):

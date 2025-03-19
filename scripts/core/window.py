@@ -17,22 +17,25 @@ class Window(viewport.Viewport):
         self._window_edge = sfGraphics.RenderTexture(rect.size.to_uint())
         self._window_edge_sprite = sfGraphics.Sprite(self._window_edge.get_texture())
         self._window_back = sfGraphics.Texture(self._asset, False, sfGraphics.IntRect((0, 0, 128, 128)))
-
-        self._rect: sfGraphics.RenderTexture = None
-        self._rect_back = sfGraphics.Texture(self._asset, False, sfGraphics.IntRect((132, 68, 24, 24)))
-        self._rect_sprite: sfGraphics.Sprite = None
-        self.rect_fade_speed = 160
-        self.rect_opacity = (160, 255)
-        self._fade_in = False
-
         self._window_back.set_repeated(self._repeat)
         self._window_back_sprite = sfGraphics.Sprite(self._window_back)
+
+        self._rect: sfGraphics.RenderTexture = None
+        self._rect_sprite: sfGraphics.Sprite = None
+        self._rect_back = sfGraphics.Texture(self._asset, False, sfGraphics.IntRect((132, 68, 24, 24)))
+        self._rect_back_sprite = sfGraphics.Sprite(self._rect_back)
+        self.rect_fade_speed = 160
+        self.rect_opacity = (128, 255)
+        self._fade_in = False
+
         if self._repeat:
             self._window_back_sprite.set_texture_rect(sfGraphics.IntRect(sfSystem.Vector2i(0, 0), self.get_local_bounds().size.to_int()))
         else:
             self._window_back_sprite.set_scale(sfSystem.Vector2f(rect.size.x / 128.0, rect.size.y / 128.0))
 
         self.content: viewport.Viewport = None
+        self._content_view: sfGraphics.RenderTexture = None
+        self._content_view_sprite: sfGraphics.Sprite = None
 
         self._cached_corner: Dict[str, List[sfGraphics.Texture]] = {}
         self._cached_edges: Dict[str, List[sfGraphics.Texture]] = {}
@@ -79,7 +82,15 @@ class Window(viewport.Viewport):
 
         if self.content is not None:
             self.content.set_color(sfGraphics.Color(255, 255, 255, self.content_opacity))
-            self._canvas.draw(self.content)
+            content_view_size = self._content_view_size()
+            if self._content_view is None or content_view_size != self._content_view.get_size():
+                self._content_view = sfGraphics.RenderTexture(content_view_size)
+                self._content_view_sprite = sfGraphics.Sprite(self._content_view.get_texture())
+                self._content_view_sprite.set_position(sfSystem.Vector2f(16, 16))
+            self._content_view.clear(sfGraphics.Color.transparent())
+            self._content_view.draw(self.content)
+            self._content_view.display()
+            self._canvas.draw(self._content_view_sprite)
 
         if self._rect is not None:
             opacity = self._rect_sprite.get_color().a
@@ -100,13 +111,20 @@ class Window(viewport.Viewport):
 
         super().render_handle(delta_time)
 
+    def set_window_rect(self, rect: sfGraphics.IntRect):
+        self._canvas = sfGraphics.RenderTexture(rect.size.to_uint())
+        self.set_texture(self._canvas.get_texture())
+        self.set_texture_rect(sfGraphics.IntRect(sfSystem.Vector2i(0, 0), rect.size.to_int()))
+        self._window_edge = sfGraphics.RenderTexture(rect.size.to_uint())
+        self._window_edge_sprite = sfGraphics.Sprite(self._window_edge.get_texture())
+        if not self._repeat:
+            self._window_back_sprite.set_scale(sfSystem.Vector2f(rect.size.x / 128.0, rect.size.y / 128.0))
+        self._render_sides()
+
     def set_rect(self, rect: sfGraphics.IntRect):
-        if (self._rect is None):
+        if self._rect is None or self._rect.get_size() != rect.size.to_uint():
             self._rect = sfGraphics.RenderTexture(rect.size.to_uint())
             self._rect_sprite = sfGraphics.Sprite(self._rect.get_texture())
-            self._render_rect(rect.size.to_uint())
-            return
-        if (self._rect.get_size() != rect.size.to_uint()):
             self._render_rect(rect.size.to_uint())
         self._rect_sprite.set_position(rect.position.to_float())
 
@@ -154,10 +172,9 @@ class Window(viewport.Viewport):
         ]
         self._render_corner(self._window_edge, self._cached_corner['window'], corner_positions)
         self._render_edge(self._window_edge, self._cached_edges['window'], target_scales, edge_positions)
+        self._window_edge.display()
 
     def _render_rect(self, size: sfSystem.Vector2u):
-        self._rect.clear(sfGraphics.Color.transparent())
-        self._rect.resize(size)
         corner_positions = [
             sfSystem.Vector2f(0, 0),
             sfSystem.Vector2f(size.x - 4, 0),
@@ -178,11 +195,14 @@ class Window(viewport.Viewport):
         ]
         self._render_corner(self._rect, self._cached_corner['rect'], corner_positions)
         self._render_edge(self._rect, self._cached_edges['rect'], target_scales, edge_positions)
-        center_sprite = sfGraphics.Sprite(self._rect_back)
-        center_sprite.set_scale(sfSystem.Vector2f((size.x - 8) / 24.0, (size.y - 8) / 24.0))
-        center_sprite.set_position(sfSystem.Vector2f(4, 4))
-        self._rect.draw(center_sprite)
+        self._rect_back_sprite.set_scale(sfSystem.Vector2f((size.x - 8) / 24.0, (size.y - 8) / 24.0))
+        self._rect_back_sprite.set_position(sfSystem.Vector2f(4, 4))
+        self._rect.draw(self._rect_back_sprite)
         self._rect.display()
+
+    def _content_view_size(self):
+        size = self.get_local_bounds().size.to_uint()
+        return sfSystem.Vector2u(size.x - 32, size.y - 32)
 
 class WindowBase(Window):
     def mouse_in_rect(self) -> bool:
@@ -205,7 +225,7 @@ class WindowBase(Window):
 
     @staticmethod
     def from_str(text: str, size: sfSystem.Vector2u, font_index: int = 0):
-        return TextEnhance.EText.from_str(text, system.System.get_font()[font_index], size, system.System.get_font_style_config())
+        return TextEnhance.EText.from_str(text, system.System.get_font()[font_index], size, system.System.get_font_style_config(), True)
 
 class WindowChoice(WindowBase):
     def __init__(self, rect: sfGraphics.IntRect, cursor_height: int, cursor_width = None, column: int = 1, asset: sfGraphics.Image = None, repeat: bool = False):
@@ -230,7 +250,7 @@ class WindowChoice(WindowBase):
             return
 
         row = self.index // self.column
-        x = self.index % self.column * (self.get_cursor_width() + 32) + 16
+        x = (self.index % self.column) * (self.get_cursor_width() + 32) + 16
         y = row * self.cursor_height + 16
         if self.content is not None:
             y -= self.content.get_origin().y
@@ -239,11 +259,21 @@ class WindowChoice(WindowBase):
     def confirm(self):
         if inputs.GameInput.trigger(sfWindow.Keyboard.Key.Enter) or inputs.GameInput.trigger(sfWindow.Keyboard.Key.Space):
             return True
-        if self.mouse_in_rect():
+        if inputs.GameInput.left_click():
             mouse_pos = self.mouse_in_local()
-            if (mouse_pos.x >= 16 and mouse_pos.x <= self.get_local_bounds().size.x - 16 and mouse_pos.y >= 0 and mouse_pos.y <= self.cursor_height):
-                if inputs.GameInput.left_click():
-                    return True
+            texture_size = self.get_texture().get_size()
+            if (mouse_pos.x >= 16 and mouse_pos.x <= texture_size.x - 16 and mouse_pos.y >= 16 and mouse_pos.y <= texture_size.y - 16):
+                actual_y = mouse_pos.y - 16 - self.content.get_origin().y
+                actual_x = mouse_pos.x - 16 - self.content.get_origin().x
+                row = actual_y // self.cursor_height
+                col = actual_x // (self.get_cursor_width() + 32)
+                index = int(row * self.column + col)
+                if index < len(self.items):
+                    if index != self.index:
+                        self.index = index
+                        ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
+                    else:
+                        return True
         return False
 
     def cancel(self):
@@ -275,15 +305,16 @@ class WindowChoice(WindowBase):
                 ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
                 return
 
-    def _mouse_response(self, delta_time: float):
-        if inputs.GameInput.wheel_up():
-            self.index = (self.index - 1 + len(self.items)) % len(self.items)
-            ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
-            return
-        if inputs.GameInput.wheel_down():
-            self.index = (self.index + 1) % len(self.items)
-            ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
-            return
+    def _wheel_response(self, delta_time: float):
+        if self.mouse_in_rect():
+            if inputs.GameInput.wheel_up():
+                self.index = (self.index - 1 + len(self.items)) % len(self.items)
+                ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
+                return
+            if inputs.GameInput.wheel_down():
+                self.index = (self.index + 1) % len(self.items)
+                ResourceMgr.AudioMgr.play_sound(system.Config.cursor_se)
+                return
 
     def render_handle(self, delta_time):
         super().render_handle(delta_time)
@@ -310,7 +341,7 @@ class WindowChoice(WindowBase):
             return
 
         self._key_response(delta_time)
-        self._mouse_response(delta_time)
+        self._wheel_response(delta_time)
         if self.confirm():
             _, callback = self.items[self.index]
             callback()
@@ -320,11 +351,11 @@ class WindowCommand(WindowChoice):
         height = 32 * (len(commands) + 1)
         super().__init__(sfGraphics.IntRect((0, 0, width, height)), 32, None, 1, asset, repeat)
         self.items = commands
-        self.content = viewport.Viewport(sfGraphics.IntRect((0, 0, width, height)))
+        self.content = viewport.Viewport(sfGraphics.IntRect((0, 0, width - 32, height - 32)))
         self.refresh()
 
     def refresh(self):
         self.content.graphics_mgr.clear()
         for i, (text, _) in enumerate(self.items):
-            text.set_position(sfSystem.Vector2f(16, i * 32 + 16))
+            text.set_position(sfSystem.Vector2f(0, i * 32))
             self.content.graphics_mgr.add(text)
