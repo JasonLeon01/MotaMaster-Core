@@ -1,22 +1,24 @@
 from functools import partial
 import traceback
-from PySFBoost import Animation, Particle, sfGraphics
-from scripts.core.graphics import GraphicsMgr
 from concurrent.futures import ThreadPoolExecutor
+from PySFBoost.Animation import AnimationMgr
+from PySFBoost.Particle import ParticleMgr
+from PySFBoost.sfGraphics import RenderTexture, Sprite, Color, IntRect
+from .graphics import GraphicsMgr
 
-class Viewport(sfGraphics.Sprite):
-    def __init__(self, rect: sfGraphics.IntRect):
+class Viewport(Sprite):
+    def __init__(self, rect: IntRect):
         self.graphics_mgr = GraphicsMgr()
-        self.animation_mgr = Animation.AnimationMgr()
-        self.particle_mgr = Particle.ParticleMgr()
-        self._canvas = sfGraphics.RenderTexture(rect.size.to_uint())
+        self.animation_mgr = AnimationMgr()
+        self.particle_mgr = ParticleMgr()
+        self._canvas = RenderTexture(rect.size.to_uint())
         self._executor = ThreadPoolExecutor(max_workers = 1)
 
         super().__init__(self._canvas.get_texture())
         self.set_position(rect.position.to_float())
 
     def update(self, delta_time: float):
-        self._canvas.clear(sfGraphics.Color.transparent())
+        self._canvas.clear(Color.transparent())
         logical_future = self._executor.submit(partial(self.logic_handle, delta_time))
 
         self.render_handle(delta_time)
@@ -46,7 +48,7 @@ class Viewport(sfGraphics.Sprite):
             if z in particle_z_list:
                 self.particle_mgr.display(self._canvas, z)
 
-    def clear(self, color: sfGraphics.Color = sfGraphics.Color.transparent()):
+    def clear(self, color: Color = Color.transparent()):
         self._canvas.clear(color)
 
     def display(self):

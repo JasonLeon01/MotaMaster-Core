@@ -1,16 +1,20 @@
 import bisect
 import os
 from typing import Dict, List
-from PySFBoost import Animation, sfGraphics, Particle, Time, sfSystem
-from . import system
+from PySFBoost.Animation import AnimationMgr
+from PySFBoost.sfGraphics import Color, Drawable, RenderTarget, RenderTexture, Sprite, Text, Texture
+from PySFBoost.Particle import ParticleMgr
+from PySFBoost.Time import TimeMgr
+from PySFBoost.sfSystem import Vector2f
+from .system import System
 
 class GraphicsMgr:
     def __init__(self):
-        self._drawables: Dict[int, List[sfGraphics.Drawable]] = {}
+        self._drawables: Dict[int, List[Drawable]] = {}
         self._z_list = []
-        self._drawable_to_z: Dict[sfGraphics.Drawable, int] = {}
+        self._drawable_to_z: Dict[Drawable, int] = {}
 
-    def add(self, drawable: sfGraphics.Drawable, z: int = 0):
+    def add(self, drawable: Drawable, z: int = 0):
         if drawable in self._drawable_to_z:
             raise ValueError('Drawable already exists.')
         if z not in self._drawables:
@@ -19,7 +23,7 @@ class GraphicsMgr:
         self._drawables[z].append(drawable)
         self._drawable_to_z[drawable] = z
 
-    def remove(self, drawable: sfGraphics.Drawable):
+    def remove(self, drawable: Drawable):
         if drawable not in self._drawable_to_z:
             raise ValueError('Drawable not found.')
         z = self._drawable_to_z[drawable]
@@ -36,7 +40,7 @@ class GraphicsMgr:
     def get_z_list(self):
         return self._z_list.copy()
 
-    def display(self, target: sfGraphics.RenderTarget, z: int = None):
+    def display(self, target: RenderTarget, z: int = None):
         if z is None:
             z_list = self.get_z_list()
         else:
@@ -44,42 +48,40 @@ class GraphicsMgr:
         for z in z_list:
             if z in self._drawables:
                 for drawable in self._drawables[z]:
-                    if isinstance(drawable, sfGraphics.Sprite):
-                        drawable.get_texture().set_smooth(system.System.get_smooth())
                     target.draw(drawable)
 
 class Graphics:
     graphics_mgr = GraphicsMgr()
-    animation_mgr = Animation.AnimationMgr()
-    particle_mgr = Particle.ParticleMgr()
+    animation_mgr = AnimationMgr()
+    particle_mgr = ParticleMgr()
 
     _frame_count = 0
-    _debug_text: sfGraphics.Text = None
-    _freeze_image: sfGraphics.Texture = None
-    _freeze_sprite: sfGraphics.Sprite = None
+    _debug_text: Text = None
+    _freeze_image: Texture = None
+    _freeze_sprite: Sprite = None
 
-    _canvas: sfGraphics.RenderTexture = None
-    _canvas_sprite: sfGraphics.Sprite = None
-    _transition: float = 0.0
+    _canvas: RenderTexture = None
+    _canvas_sprite: Sprite = None
+    transition_duration: float = 0.0
 
     @classmethod
     def init(cls):
-        cls._canvas = sfGraphics.RenderTexture(system.System.get_size().to_uint())
-        cls._canvas_sprite = sfGraphics.Sprite(cls._canvas.get_texture())
-        cls._canvas.clear(sfGraphics.Color.black())
+        cls._canvas = RenderTexture(System.get_size().to_uint())
+        cls._canvas_sprite = Sprite(cls._canvas.get_texture())
+        cls._canvas.clear(Color.black())
         cls._canvas.display()
 
-        cls._freeze_image: sfGraphics.Texture = sfGraphics.Texture(system.System.get_size().to_uint())
-        cls._freeze_sprite: sfGraphics.Sprite = sfGraphics.Sprite(cls._freeze_image)
+        cls._freeze_image: Texture = Texture(System.get_size().to_uint())
+        cls._freeze_sprite: Sprite = Sprite(cls._freeze_image)
 
     @classmethod
     def update(cls, delta_time: float):
-        if cls._canvas_sprite.get_scale().x != system.System.get_scale():
-            scale = system.System.get_scale()
-            cls._canvas_sprite.set_scale(sfSystem.Vector2f(scale, scale))
+        if cls._canvas_sprite.get_scale().x != System.get_scale():
+            scale = System.get_scale()
+            cls._canvas_sprite.set_scale(Vector2f(scale, scale))
 
         cls._frame_count += 1
-        cls._canvas.clear(sfGraphics.Color.transparent())
+        cls._canvas.clear(Color.transparent())
         graphics_z_list = cls.graphics_mgr.get_z_list()
         animation_z_list = cls.animation_mgr.get_z_list()
         particle_z_list = cls.particle_mgr.get_z_list()
@@ -93,39 +95,45 @@ class Graphics:
                 cls.particle_mgr.display(cls._canvas, z)
 
         if cls._freeze_sprite is not None and cls._freeze_sprite.get_color().a > 0:
-            speed = 255 * cls._transition * delta_time
+            speed = 255 * cls.transition_duration * delta_time
             if cls._freeze_sprite.get_color().a - speed > 0:
-                cls._freeze_sprite.set_color(sfGraphics.Color(255, 255, 255, int(cls._freeze_sprite.get_color().a - speed)))
+                cls._freeze_sprite.set_color(Color(255, 255, 255, int(cls._freeze_sprite.get_color().a - speed)))
             else:
-                cls._freeze_sprite.set_color(sfGraphics.Color(255, 255, 255, 0))
+                cls._freeze_sprite.set_color(Color(255, 255, 255, 0))
             cls._canvas.draw(cls._freeze_sprite)
 
         if os.environ.get('DEBUG') == 'True':
             cls.debug_info(cls._canvas, delta_time)
 
         cls._canvas.display()
-        cls._canvas.get_texture().set_smooth(system.System.get_smooth())
-        system.System.window.draw(cls._canvas_sprite)
+        cls._canvas.get_texture().set_smooth(System.get_smooth())
+        System.window.draw(cls._canvas_sprite)
 
     @classmethod
-    def debug_info(cls, target: sfGraphics.RenderTarget, delta_time: float):
+    def debug_info(cls, target: RenderTarget, delta_time: float):
         import psutil
         if cls._debug_text is None:
-            cls._debug_text = sfGraphics.Text(system.System.get_font()[0], '', 12)
+            cls._debug_text = Text(System.get_font()[0], '', 12)
 
         fps = 1.0 / delta_time
-        average_fps = cls._frame_count / Time.TimeMgr.get_current_time().as_seconds()
+        average_fps = cls._frame_count / TimeMgr.get_current_time().as_seconds()
 
         text = f'FPS: {fps:.2f}\nAverage FPS: {average_fps:.2f}\nMemory: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB'
         cls._debug_text.set_string(text)
-        cls._debug_text.set_position(sfSystem.Vector2f(10, 10))
+        cls._debug_text.set_position(Vector2f(10, 10))
         target.draw(cls._debug_text)
 
     @classmethod
     def freeze(cls):
         cls._freeze_image.update(cls._canvas.get_texture())
-        cls._freeze_sprite.set_color(sfGraphics.Color(255, 255, 255, 255))
+        cls._freeze_sprite.set_color(Color(255, 255, 255, 255))
 
     @classmethod
-    def transition(cls, duration: float = 1.0):
-        cls._transition = duration
+    def transition(cls, duration: float = 2.0):
+        cls.transition_duration = duration
+
+    @classmethod
+    def clear(cls):
+        cls.graphics_mgr.clear()
+        cls.animation_mgr.clear()
+        cls.particle_mgr.clear()

@@ -1,5 +1,6 @@
 from PySFBoost import *
 from scripts.core import *
+from scripts.core.graphics import Graphics
 from scripts.scene import *
 
 def setup():
@@ -11,16 +12,15 @@ def setup():
     system.System.current_scene = title.Scene()
 
 def clear():
+    Graphics.clear()
     ResourceMgr.TextureMgr.clear()
     ResourceMgr.FontMgr.clear()
     ResourceMgr.AudioMgr.clear()
 
 def main():
     setup()
-
     if system.System.current_scene is not None:
         system.System.current_scene.main()
-
     clear()
 
 if __name__ == '__main__':

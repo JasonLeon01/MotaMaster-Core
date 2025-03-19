@@ -1,11 +1,11 @@
 from functools import partial
 import logging
 import traceback
-from . import graphics, method, system, inputs
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from PySFBoost.sfWindow import Event
 from PySFBoost.Time import TimeMgr
 from PySFBoost.ResourceMgr import AudioMgr
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from .inputs import GameInput
 
 class SceneBase:
     def __init__(self):
@@ -14,11 +14,14 @@ class SceneBase:
 
     def main(self):
         self.on_start()
-        graphics.Graphics.transition()
 
-        window = system.System.window
+        from .system import System
+        from .graphics import Graphics
+        Graphics.transition()
+
+        window = System.window
         while window.is_open():
-            inputs.GameInput.wheel_delta = 0
+            GameInput.wheel_delta = 0
             event: Event = None
             try:
                 while True:
@@ -28,13 +31,13 @@ class SceneBase:
                     if event.isClosed():
                         window.close()
                     if event.isFocusLost():
-                        inputs.GameInput.focused = False
+                        GameInput.focused = False
                     if event.isFocusGained():
-                        inputs.GameInput.focused = True
+                        GameInput.focused = True
                     if event.isMouseWheelScrolled():
                         wheel_event = event.getIfMouseWheelScrolled()
                         if wheel_event is not None:
-                            inputs.GameInput.wheel_delta = wheel_event.delta
+                            GameInput.wheel_delta = wheel_event.delta
             except Exception as e:
                 logging.error("Window execution failed: %s\n%s", e, traceback.format_exc())
 
@@ -42,10 +45,12 @@ class SceneBase:
             delta_time = TimeMgr.get_delta_time().as_seconds()
             self.update(delta_time)
 
-            if system.System.current_scene != self:
+            if System.current_scene != self:
                 break
 
+        Graphics.freeze()
         self.on_stop()
+
 
     def on_start(self):
         pass
@@ -63,9 +68,10 @@ class SceneBase:
         pass
 
     def render_handle(self, delta_time: float):
-        graphics.Graphics.animation_mgr.update(delta_time)
-        graphics.Graphics.particle_mgr.update(delta_time)
-        graphics.Graphics.update(delta_time)
+        from .graphics import Graphics
+        Graphics.animation_mgr.update(delta_time)
+        Graphics.particle_mgr.update(delta_time)
+        Graphics.update(delta_time)
 
     def audio_handle(self, delta_time: float):
         AudioMgr.update()
@@ -85,5 +91,6 @@ class SceneBase:
             except Exception as e:
                 logging.error("Thread execution failed: %s\n%s", e, traceback.format_exc())
 
-        system.System.window.display()
+        from .system import System
+        System.window.display()
         self.on_late_update(delta_time)

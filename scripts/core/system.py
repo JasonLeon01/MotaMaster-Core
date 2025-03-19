@@ -1,22 +1,26 @@
-import configparser
+from configparser import ConfigParser
 from typing import Any, Dict, List
 
+from PySFBoost.sfSystem import Vector2f, Vector2u
+from PySFBoost.sfWindow import ContextSettings, Style, VideoMode
+from PySFBoost.sfGraphics import Color, Font, Image, RenderWindow
+from PySFBoost.TextEnhance import EText
+from PySFBoost.ResourceMgr import FontMgr, TextureMgr
 from . import scene
-from . import method
-from PySFBoost import sfSystem, sfWindow, sfGraphics, TextEnhance, ResourceMgr
+from .method import load_json_file
 
 class System:
-    window: sfGraphics.RenderWindow = None
-    _size = sfSystem.Vector2f(640, 480)
+    window: RenderWindow = None
+    _size = Vector2f(640, 480)
     _scale = 1
     _title = ''
-    _font: List[sfGraphics.Font] = None
+    _font: List[Font] = []
     _font_size = 20
-    _font_style_config: TextEnhance.EText.StyleConfig = None
+    _font_style_config: EText.StyleConfig = None
     _smooth = False
     _frame_rate = 30
     _vertical_sync = False
-    _icon: sfGraphics.Image = None
+    _icon: Image = None
     is_music_on = True
     is_sound_on = True
     is_voice_on = True
@@ -25,7 +29,7 @@ class System:
 
     @classmethod
     def init(cls, inifile):
-        iniconfig = configparser.ConfigParser()
+        iniconfig = ConfigParser()
         iniconfig.read(inifile)
         cls._title = Config.title_name
         cls._scale = iniconfig['Mota'].getfloat('Scale')
@@ -38,32 +42,32 @@ class System:
 
         cls._real_size = (cls._size * cls._scale).to_uint()
         cls.current_scene = None
-        context_settings = sfWindow.ContextSettings()
+        context_settings = ContextSettings()
         context_settings.antiAliasingLevel = 8
-        cls.window = sfGraphics.RenderWindow(sfWindow.VideoMode(cls._real_size), cls._title, sfWindow.Style.Titlebar | sfWindow.Style.Close, settings=context_settings)
-        ico_image = ResourceMgr.TextureMgr.system(Config.title_icon).copy_to_image()
+        cls.window = RenderWindow(VideoMode(cls._real_size), cls._title, Style.Titlebar | Style.Close, settings=context_settings)
+        ico_image = TextureMgr.system(Config.title_icon).copy_to_image()
         cls.window.set_icon(ico_image)
-        ResourceMgr.TextureMgr.release_system(Config.title_icon)
+        TextureMgr.release_system(Config.title_icon)
         cls.window.set_framerate_limit(cls._frame_rate)
         cls.window.set_vertical_sync_enabled(cls._vertical_sync)
-        cls.window.clear(sfGraphics.Color.black())
+        cls.window.clear(Color.black())
         cls.window.display()
 
         cls._font = []
         for font in Config.font_name:
-            font_ = ResourceMgr.FontMgr.get_font(font)
+            font_ = FontMgr.get_font(font)
             font_.set_smooth(cls._smooth)
             cls._font.append(font_)
-        cls._font_style_config = TextEnhance.EText.StyleConfig(sfGraphics.Color.white(), cls._font_size, 1.0, 1.0)
+        cls._font_style_config = EText.StyleConfig(Color.white(), cls._font_size, 1.0, 1.0)
 
         print('System initialized successfully.')
 
     @classmethod
-    def get_size(cls) -> sfSystem.Vector2f:
+    def get_size(cls) -> Vector2f:
         return cls._size
 
     @classmethod
-    def get_real_size(cls) -> sfSystem.Vector2u:
+    def get_real_size(cls) -> Vector2u:
         return cls._real_size
 
     @classmethod
@@ -86,7 +90,7 @@ class System:
         cls.window.set_title(title)
 
     @classmethod
-    def get_font(cls) -> List[sfGraphics.Font]:
+    def get_font(cls) -> List[Font]:
         return cls._font
 
     @classmethod
@@ -112,11 +116,11 @@ class System:
         cls.window.set_vertical_sync_enabled(vertical_sync)
 
     @classmethod
-    def get_font_style_config(cls) -> TextEnhance.EText.StyleConfig:
+    def get_font_style_config(cls) -> EText.StyleConfig:
         return cls._font_style_config
 
     @classmethod
-    def set_font_style_config(cls, font_style_config: TextEnhance.EText.StyleConfig):
+    def set_font_style_config(cls, font_style_config: EText.StyleConfig):
         cls._font_style_config = font_style_config
 
     @classmethod
@@ -152,7 +156,7 @@ class Config:
 
     @classmethod
     def init(cls, files):
-        config_sys = method.load_json_file(files[0])
+        config_sys = load_json_file(files[0])
         cls.title_name = config_sys['title_name']
         cls.title_icon = config_sys['title_icon']
         cls.title_file = config_sys['title_file']
@@ -162,7 +166,7 @@ class Config:
         cls.windowskin_file = config_sys['windowskin_file']
         cls.window_opacity = config_sys['window_opacity']
 
-        config_audio = method.load_json_file(files[1])
+        config_audio = load_json_file(files[1])
         cls.cursor_se = config_audio['cursor_se']
         cls.decision_se = config_audio['decision_se']
         cls.cancel_se = config_audio['cancel_se']
