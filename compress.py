@@ -4,6 +4,18 @@ from PySFBoost import *
 import shutil
 import zipfile
 
+def create_nested_dict(path_parts, value):
+    if len(path_parts) == 1:
+        return {path_parts[0]: value}
+    return {path_parts[0]: create_nested_dict(path_parts[1:], value)}
+
+def merge_dicts(dict1, dict2):
+    for key in dict2:
+        if key in dict1 and isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
+            merge_dicts(dict1[key], dict2[key])
+        else:
+            dict1[key] = dict2[key]
+
 def load_assets_to_dict(assets_folder):
     assets_dict = {}
     for root, dirs, files in os.walk(assets_folder):
@@ -11,6 +23,7 @@ def load_assets_to_dict(assets_folder):
             if file.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
                 file_path = os.path.join(root, file)
                 relative_path = os.path.relpath(file_path, assets_folder)
+                path_parts = relative_path.replace('\\', '/').split('/')
 
                 image = sfGraphics.Image()
                 success = image.load_from_file(file_path)
@@ -22,10 +35,11 @@ def load_assets_to_dict(assets_folder):
                 format = ext[1:].lower()
                 try:
                     memory_data = bytes(image.save_to_memory(format))
+                    nested_dict = create_nested_dict(path_parts, memory_data)
+                    merge_dicts(assets_dict, nested_dict)
                 except TypeError as e:
                     print(f"Failed to save at {file_path}, {e}")
                     continue
-                assets_dict[relative_path] = memory_data
 
     return assets_dict
 
@@ -42,13 +56,16 @@ def load_data_to_dict(data_folder):
     data_dict = {}
     for root, dirs, files in os.walk(data_folder):
         for file in files:
-            file_path = os.path.join(root, file)
-            relative_path = os.path.relpath(file_path, data_folder)
-
             if file.lower().endswith('.json'):
+                file_path = os.path.join(root, file)
+                relative_path = os.path.relpath(file_path, data_folder)
+                path_without_ext = os.path.splitext(relative_path)[0]
+                path_parts = path_without_ext.replace('\\', '/').split('/')
+
                 with open(file_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    data_dict[relative_path] = data
+                    nested_dict = create_nested_dict(path_parts, data)
+                    merge_dicts(data_dict, nested_dict)
 
     return data_dict
 
@@ -81,7 +98,7 @@ def create_game_package(output_zip):
                 os.makedirs(os.path.dirname(dst), exist_ok=True)
                 shutil.copytree(folder, dst, ignore=ignore_patterns)
 
-        files_to_copy = ['assets.mtpak', 'data.mtpak', 'mota.ini']
+        files_to_copy = ['assets.mtpak', 'data.mtpak', 'main.py', 'mota.ini', 'mota.exe']
         for file in files_to_copy:
             if os.path.exists(file):
                 shutil.copy2(file, os.path.join(temp_dir, file))

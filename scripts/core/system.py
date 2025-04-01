@@ -1,3 +1,4 @@
+import os
 from configparser import ConfigParser
 from typing import Any, Dict, List
 
@@ -8,6 +9,19 @@ from PySFBoost.TextEnhance import EText
 from PySFBoost.ResourceMgr import FontMgr, TextureMgr
 from . import scene
 from .method import load_json_file
+
+data_cache = {}
+if os.path.exists('data.mtpak'):
+    import pickle
+    with open('data.mtpak', 'rb') as f:
+        data_cache = pickle.load(f)
+
+assets_cache = {}
+if os.path.exists('assets.mtpak'):
+    import pickle
+    with open('assets.mtpak', 'rb') as f:
+        assets_cache = pickle.load(f)
+    TextureMgr.add_pak_ref(assets_cache)
 
 class System:
     window: RenderWindow = None
@@ -156,7 +170,14 @@ class Config:
 
     @classmethod
     def init(cls, files):
-        config_sys = load_json_file(files[0])
+        if os.path.exists(files[0]):
+            config_sys = load_json_file(files[0])
+        else:
+            path_parts = files[0].replace('\\', '/').split('/')
+            config_type = path_parts[-2]
+            config_name = path_parts[-1].split('.')[0]
+            config_sys = data_cache[config_type][config_name]
+
         cls.title_name = config_sys['title_name']
         cls.title_icon = config_sys['title_icon']
         cls.title_file = config_sys['title_file']
@@ -166,7 +187,13 @@ class Config:
         cls.windowskin_file = config_sys['windowskin_file']
         cls.window_opacity = config_sys['window_opacity']
 
-        config_audio = load_json_file(files[1])
+        if os.path.exists(files[1]):
+            config_audio = load_json_file(files[1])
+        else:
+            path_parts = files[1].replace('\\', '/').split('/')
+            config_type = path_parts[-2]
+            config_name = path_parts[-1].split('.')[0]
+            config_audio = data_cache[config_type][config_name]
         cls.cursor_se = config_audio['cursor_se']
         cls.decision_se = config_audio['decision_se']
         cls.cancel_se = config_audio['cancel_se']
