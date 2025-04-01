@@ -71,6 +71,7 @@ class SceneBase:
         from .graphics import Graphics
         Graphics.animation_mgr.update(delta_time)
         Graphics.particle_mgr.update(delta_time)
+        Graphics.video_mgr.update(delta_time)
         Graphics.update(delta_time)
 
     def audio_handle(self, delta_time: float):
