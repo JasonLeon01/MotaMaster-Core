@@ -69,7 +69,7 @@ class System:
 
         cls._font = []
         for font in Config.font_name:
-            font_ = FontMgr.get_font(font)
+            font_ = FontMgr.get_font_from_file(font)
             font_.set_smooth(cls._smooth)
             cls._font.append(font_)
         cls._font_style_config = EText.StyleConfig(Color.white(), cls._font_size, 1.0, 1.0)
