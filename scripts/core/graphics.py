@@ -1,7 +1,9 @@
 import bisect
 import os
 from typing import Dict, List
-from PySFBoost.sfSystem import Vector2f
+from PySFBoost import sfGraphics
+from PySFBoost.TextEnhance import EText
+from PySFBoost.sfSystem import Vector2f, Vector2u
 from PySFBoost.sfGraphics import Color, Drawable, RenderTarget, RenderTexture, Sprite, Text, Texture
 from PySFBoost.Animation import AnimationMgr
 from PySFBoost.Particle import ParticleMgr
@@ -69,6 +71,7 @@ class Graphics:
     @classmethod
     def init(cls):
         cls._canvas = RenderTexture(System.get_size().to_uint())
+        cls._canvas.set_smooth(True)
         cls._canvas_sprite = Sprite(cls._canvas.get_texture())
         cls._canvas.clear(Color.black())
         cls._canvas.display()
@@ -106,11 +109,13 @@ class Graphics:
                 cls._freeze_sprite.set_color(Color(255, 255, 255, 0))
             cls._canvas.draw(cls._freeze_sprite)
 
+        if cls._freeze_sprite is not None and cls._freeze_sprite.get_color().a == 0:
+            cls.transition_duration = 0.0
+
         if os.environ.get('DEBUG') == 'True':
             cls.debug_info(cls._canvas, delta_time)
 
         cls._canvas.display()
-        cls._canvas.get_texture().set_smooth(System.get_smooth())
         System.window.draw(cls._canvas_sprite)
 
     @classmethod

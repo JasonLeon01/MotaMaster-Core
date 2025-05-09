@@ -2,6 +2,7 @@ from functools import partial
 import logging
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from PySFBoost import sfGraphics, sfSystem
 from PySFBoost.sfWindow import Event
 from PySFBoost.Time import TimeMgr
 from PySFBoost.ResourceMgr import AudioMgr
@@ -39,7 +40,7 @@ class SceneBase:
                         if wheel_event is not None:
                             GameInput.wheel_delta = wheel_event.delta
             except Exception as e:
-                logging.error("Window execution failed: %s\n%s", e, traceback.format_exc())
+                logging.error('Window execution failed: %s\n%s', e, traceback.format_exc())
 
             TimeMgr.update()
             delta_time = TimeMgr.get_delta_time().as_seconds()
@@ -50,7 +51,6 @@ class SceneBase:
 
         Graphics.freeze()
         self.on_stop()
-
 
     def on_start(self):
         pass
@@ -90,7 +90,7 @@ class SceneBase:
             try:
                 future.result()
             except Exception as e:
-                logging.error("Thread execution failed: %s\n%s", e, traceback.format_exc())
+                logging.error('Thread execution failed: %s\n%s', e, traceback.format_exc())
 
         from .system import System
         System.window.display()

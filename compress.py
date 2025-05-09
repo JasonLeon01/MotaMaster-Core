@@ -28,7 +28,7 @@ def load_assets_to_dict(assets_folder):
                 image = sfGraphics.Image()
                 success = image.load_from_file(file_path)
                 if not success:
-                    print(f"Access failed: {file_path}")
+                    print(f'Access failed: {file_path}')
                     continue
 
                 _, ext = os.path.splitext(file)
@@ -38,7 +38,7 @@ def load_assets_to_dict(assets_folder):
                     nested_dict = create_nested_dict(path_parts, memory_data)
                     merge_dicts(assets_dict, nested_dict)
                 except TypeError as e:
-                    print(f"Failed to save at {file_path}, {e}")
+                    print(f'Failed to save at {file_path}, {e}')
                     continue
 
     return assets_dict
@@ -48,9 +48,9 @@ def save_asset_dict_to_mtpak(data_dict, output_file):
         with open(output_file, 'wb') as f:
             import pickle
             pickle.dump(data_dict, f)
-        print(f"Successfully save to {output_file}")
+        print(f'Successfully save to {output_file}')
     except pickle.PickleError as e:
-        print(f"Save failed: {e}")
+        print(f'Save failed: {e}')
 
 def load_data_to_dict(data_folder):
     data_dict = {}
@@ -74,13 +74,13 @@ def save_data_dict_to_mtpak(data_dict, output_file):
         with open(output_file, 'wb') as f:
             import pickle
             pickle.dump(data_dict, f)
-        print(f"Successfully save to {output_file}")
+        print(f'Successfully save to {output_file}')
     except pickle.PickleError as e:
-        print(f"Save failed: {e}")
+        print(f'Save failed: {e}')
 
 def create_game_package(output_zip):
     try:
-        temp_dir = "temp_package"
+        temp_dir = 'temp_package'
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
         os.makedirs(temp_dir)
@@ -111,15 +111,15 @@ def create_game_package(output_zip):
                     zipf.write(file_path, arcname)
 
         shutil.rmtree(temp_dir)
-        print(f"Successfully created package: {output_zip}")
+        print(f'Successfully created package: {output_zip}')
 
         for mtpak in ['assets.mtpak', 'data.mtpak']:
             if os.path.exists(mtpak):
                 os.remove(mtpak)
-                print(f"Removed {mtpak}")
+                print(f'Removed {mtpak}')
 
     except Exception as e:
-        print(f"Package creation failed: {e}")
+        print(f'Package creation failed: {e}')
 
 def get_game_name():
     try:
@@ -127,17 +127,17 @@ def get_game_name():
             system_config = json.load(f)
             return system_config.get('title_name', 'game_package')
     except Exception as e:
-        print(f"Failed to read system config: {e}")
+        print(f'Failed to read system config: {e}')
         return 'game_package'
 
 if __name__ == '__main__':
-    assets_folder = "assets"
-    data_folder = "data"
-    output_assets_file = "assets.mtpak"
-    output_data_file = "data.mtpak"
+    assets_folder = 'assets'
+    data_folder = 'data'
+    output_assets_file = 'assets.mtpak'
+    output_data_file = 'data.mtpak'
 
     game_name = get_game_name()
-    output_zip = f"{game_name}.zip"
+    output_zip = f'{game_name}.zip'
 
     assets_dict = load_assets_to_dict(assets_folder)
     save_asset_dict_to_mtpak(assets_dict, output_assets_file)

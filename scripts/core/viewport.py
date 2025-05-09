@@ -1,9 +1,10 @@
 from functools import partial
+import imp
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from PySFBoost.Animation import AnimationMgr
 from PySFBoost.Particle import ParticleMgr
-from PySFBoost.sfGraphics import RenderTexture, Sprite, Color, IntRect
+from PySFBoost.sfGraphics import RenderTexture, Sprite, Color, IntRect, View
 from .graphics import GraphicsMgr
 
 class Viewport(Sprite):
@@ -12,10 +13,17 @@ class Viewport(Sprite):
         self.animation_mgr = AnimationMgr()
         self.particle_mgr = ParticleMgr()
         self._canvas = RenderTexture(rect.size.to_uint())
+        self._canvas.set_smooth(True)
         self._executor = ThreadPoolExecutor(max_workers = 1)
 
         super().__init__(self._canvas.get_texture())
         self.set_position(rect.position.to_float())
+
+    def set_view(self, view: View):
+        self._canvas.set_view(view)
+
+    def get_view(self) -> View:
+        return self._canvas.get_view()
 
     def update(self, delta_time: float):
         self._canvas.clear(Color.transparent())
@@ -26,7 +34,7 @@ class Viewport(Sprite):
         try:
             logical_future.result()
         except Exception as e:
-            print(f"Thread execution failed: {e}\n{traceback.format_exc()}")
+            print(f'Thread execution failed: {e}\n{traceback.format_exc()}')
 
         self._canvas.display()
 

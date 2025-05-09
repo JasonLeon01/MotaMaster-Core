@@ -1,8 +1,10 @@
 import math
+from optparse import Option
+from re import S
 from typing import Any, Callable, Dict, List, Tuple
 from PySFBoost.ResourceMgr import TextureMgr, AudioMgr
 from PySFBoost.sfSystem import Vector2f, Vector2i, Vector2u
-from PySFBoost.sfGraphics import Color, Image, IntRect, RenderTarget, RenderTexture, Sprite, Texture
+from PySFBoost.sfGraphics import Color, FloatRect, Image, IntRect, RenderTarget, RenderTexture, Sprite, Texture, Font, View
 from PySFBoost.sfWindow import Keyboard, Mouse
 from PySFBoost.TextEnhance import EText
 from .viewport import Viewport
@@ -21,6 +23,7 @@ class Window(Viewport):
         self._repeat = repeat
 
         self._window_edge = RenderTexture(rect.size.to_uint())
+        self._window_edge.set_smooth(True)
         self._window_edge_sprite = Sprite(self._window_edge.get_texture())
         self._window_back = Texture(self._asset, False, IntRect((0, 0, 128, 128)))
         self._window_back.set_repeated(self._repeat)
@@ -40,8 +43,6 @@ class Window(Viewport):
             self._window_back_sprite.set_scale(Vector2f(rect.size.x / 128.0, rect.size.y / 128.0))
 
         self.content: Viewport = None
-        self._content_view: RenderTexture = None
-        self._content_view_sprite: Sprite = None
 
         self._cached_corner: Dict[str, List[Texture]] = {}
         self._cached_edges: Dict[str, List[Texture]] = {}
@@ -80,6 +81,7 @@ class Window(Viewport):
 
     def render_handle(self, delta_time: float):
         if self.content is not None:
+            self.content.clear()
             self.content.render_handle(delta_time)
             self.content.display()
         self._window_back_sprite.set_color(Color(255, 255, 255, self.back_opacity))
@@ -89,14 +91,9 @@ class Window(Viewport):
         if self.content is not None:
             self.content.set_color(Color(255, 255, 255, self.content_opacity))
             content_view_size = self._content_view_size()
-            if self._content_view is None or content_view_size != self._content_view.get_size():
-                self._content_view = RenderTexture(content_view_size)
-                self._content_view_sprite = Sprite(self._content_view.get_texture())
-                self._content_view_sprite.set_position(Vector2f(16, 16))
-            self._content_view.clear(Color.transparent())
-            self._content_view.draw(self.content)
-            self._content_view.display()
-            self._canvas.draw(self._content_view_sprite)
+            self.content.set_view(View(FloatRect(Vector2f(0, 0), content_view_size)))
+            self.content.set_position(Vector2f(16, 16))
+            self._canvas.draw(self.content)
 
         if self._rect is not None:
             opacity = self._rect_sprite.get_color().a
@@ -119,9 +116,11 @@ class Window(Viewport):
 
     def set_window_rect(self, rect: IntRect):
         self._canvas = RenderTexture(rect.size.to_uint())
+        self._canvas.set_smooth(True)
         self.set_texture(self._canvas.get_texture())
         self.set_texture_rect(IntRect(Vector2i(0, 0), rect.size.to_int()))
         self._window_edge = RenderTexture(rect.size.to_uint())
+        self._window_edge.set_smooth(True)
         self._window_edge_sprite = Sprite(self._window_edge.get_texture())
         if not self._repeat:
             self._window_back_sprite.set_scale(Vector2f(rect.size.x / 128.0, rect.size.y / 128.0))
@@ -130,6 +129,7 @@ class Window(Viewport):
     def set_rect(self, rect: IntRect):
         if self._rect is None or self._rect.get_size() != rect.size.to_uint():
             self._rect = RenderTexture(rect.size.to_uint())
+            self._rect.set_smooth(True)
             self._rect_sprite = Sprite(self._rect.get_texture())
             self._render_rect(rect.size.to_uint())
         self._rect_sprite.set_position(rect.position.to_float())
@@ -207,8 +207,8 @@ class Window(Viewport):
         self._rect.display()
 
     def _content_view_size(self):
-        size = self.get_local_bounds().size.to_uint()
-        return Vector2u(size.x - 32, size.y - 32)
+        size = self.get_local_bounds().size
+        return Vector2f(size.x - 32, size.y - 32)
 
 class WindowBase(Window):
     def mouse_in_rect(self) -> bool:
@@ -230,8 +230,10 @@ class WindowBase(Window):
         return Vector2i(tex_x, tex_y)
 
     @staticmethod
-    def from_str(text: str, size: Vector2u, font_index: int = 0):
-        return EText.from_str(text, System.get_font()[font_index], size, System.get_font_style_config(), True)
+    def from_str(text: str, size: Vector2u, font: Font = None, text_pos: int = 0):
+        if font is None:
+            font = System.get_font()[0]
+        return EText.from_str(text, font, size, System.get_font_style_config(), text_pos)
 
 class WindowChoice(WindowBase):
     def __init__(self, rect: IntRect, cursor_height: int, cursor_width = None, column: int = 1, asset: Image = None, repeat: bool = False):
@@ -240,7 +242,7 @@ class WindowChoice(WindowBase):
         self.cursor_width = cursor_width
         self.cursor_height = cursor_height
         self.index = 0
-        self.items: List[Tuple[EText, Callable[..., Any]]] = []
+        self.items: List[Tuple[EText, Option[Callable[..., Any]]]] = []
         self.active = True
 
     def rows(self) -> int:
@@ -340,7 +342,6 @@ class WindowChoice(WindowBase):
                 self.content.set_origin(origin)
         self.update_cursor_rect()
 
-
     def logic_handle(self, delta_time: float):
         super().logic_handle(delta_time)
         if not self.active:
@@ -350,7 +351,8 @@ class WindowChoice(WindowBase):
         self._wheel_response(delta_time)
         if self.confirm():
             _, callback = self.items[self.index]
-            callback()
+            if callable(callback):
+                callback()
 
 class WindowCommand(WindowChoice):
     def __init__(self, width: int, commands: List[Tuple[EText, Callable[..., Any]]], asset: Image = None, repeat: bool = False):

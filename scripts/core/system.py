@@ -31,7 +31,6 @@ class System:
     _font: List[Font] = []
     _font_size = 20
     _font_style_config: EText.StyleConfig = None
-    _smooth = False
     _frame_rate = 30
     _vertical_sync = False
     _icon: Image = None
@@ -48,7 +47,6 @@ class System:
         cls._title = Config.title_name
         cls._scale = iniconfig['Mota'].getfloat('Scale')
         cls._frame_rate = iniconfig['Mota'].getint('FrameRate')
-        cls._smooth = iniconfig['Mota'].getboolean('Smooth')
         cls._vertical_sync = iniconfig['Mota'].getboolean('VerticalSync')
         cls.is_music_on = iniconfig['Mota'].getboolean('MusicOn')
         cls.is_sound_on = iniconfig['Mota'].getboolean('SoundOn')
@@ -70,7 +68,7 @@ class System:
         cls._font = []
         for font in Config.font_name:
             font_ = FontMgr.get_font_from_file(font)
-            font_.set_smooth(cls._smooth)
+            font_.set_smooth(True)
             cls._font.append(font_)
         cls._font_style_config = EText.StyleConfig(Color.white(), cls._font_size, 1.0, 1.0)
 
@@ -115,10 +113,6 @@ class System:
     def set_frame_rate(cls, frame_rate: int):
         cls._frame_rate = frame_rate
         cls.window.set_framerate_limit(frame_rate)
-
-    @classmethod
-    def get_smooth(cls) -> bool:
-        return cls._smooth
 
     @classmethod
     def get_vertical_sync(cls) -> bool:

@@ -21,6 +21,14 @@ def main():
     setup()
     if system.System.current_scene is not None:
         system.System.current_scene.main()
+
+    graphics.Graphics.transition(1)
+    while graphics.Graphics.transition_duration > 0:
+        delta_time = Time.TimeMgr.get_delta_time().as_seconds()
+        graphics.Graphics.update(delta_time)
+        ResourceMgr.AudioMgr.update()
+        system.System.window.display()
+
     clear()
 
 if __name__ == '__main__':
