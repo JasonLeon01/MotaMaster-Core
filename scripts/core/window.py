@@ -1,7 +1,5 @@
 import math
-from optparse import Option
-from re import S
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 from PySFBoost.ResourceMgr import TextureMgr, AudioMgr
 from PySFBoost.sfSystem import Vector2f, Vector2i, Vector2u
 from PySFBoost.sfGraphics import Color, FloatRect, Image, IntRect, RenderTarget, RenderTexture, Sprite, Texture, Font, View
@@ -79,6 +77,10 @@ class Window(Viewport):
         self._render_sides()
         self.render_count = 0
 
+    @property
+    def size(self):
+        return self.get_local_bounds().size
+
     def render_handle(self, delta_time: float):
         if self.content is not None:
             self.content.clear()
@@ -91,8 +93,8 @@ class Window(Viewport):
         if self.content is not None:
             self.content.set_color(Color(255, 255, 255, self.content_opacity))
             content_view_size = self._content_view_size()
-            self.content.set_view(View(FloatRect(Vector2f(0, 0), content_view_size)))
-            self.content.set_position(Vector2f(16, 16))
+            self.content.set_view(View(FloatRect(self.content.get_origin(), content_view_size)))
+            self.content.set_position(Vector2f(16 + self.content.get_origin().x, 16 + self.content.get_origin().y))
             self._canvas.draw(self.content)
 
         if self._rect is not None:
@@ -157,24 +159,23 @@ class Window(Viewport):
 
     def _render_sides(self):
         self._window_edge.clear(Color.transparent())
-        size = self.get_local_bounds().size
         corner_positions = [
             Vector2f(0, 0),
-            Vector2f(size.x - 16, 0),
-            Vector2f(0, size.y - 16),
-            Vector2f(size.x - 16, size.y - 16)
+            Vector2f(self.size.x - 16, 0),
+            Vector2f(0, self.size.y - 16),
+            Vector2f(self.size.x - 16, self.size.y - 16)
         ]
         target_scales = [
-            Vector2u(size.x - 32, 16),
-            Vector2u(size.x - 32, 16),
-            Vector2u(16, size.y - 32),
-            Vector2u(16, size.y - 32)
+            Vector2u(self.size.x - 32, 16),
+            Vector2u(self.size.x - 32, 16),
+            Vector2u(16, self.size.y - 32),
+            Vector2u(16, self.size.y - 32)
         ]
         edge_positions = [
             Vector2f(16, 0),
-            Vector2f(16, size.y - 16),
+            Vector2f(16, self.size.y - 16),
             Vector2f(0, 16),
-            Vector2f(size.x - 16, 16)
+            Vector2f(self.size.x - 16, 16)
         ]
         self._render_corner(self._window_edge, self._cached_corner['window'], corner_positions)
         self._render_edge(self._window_edge, self._cached_edges['window'], target_scales, edge_positions)
@@ -207,8 +208,7 @@ class Window(Viewport):
         self._rect.display()
 
     def _content_view_size(self):
-        size = self.get_local_bounds().size
-        return Vector2f(size.x - 32, size.y - 32)
+        return Vector2f(self.size.x - 32, self.size.y - 32)
 
 class WindowBase(Window):
     def mouse_in_rect(self) -> bool:
@@ -230,10 +230,13 @@ class WindowBase(Window):
         return Vector2i(tex_x, tex_y)
 
     @staticmethod
-    def from_str(text: str, size: Vector2u, font: Font = None, text_pos: int = 0):
+    def from_str(text: str, size: Vector2u, font: Font = None, font_size: Optional[int] = None, text_pos: int = 0):
         if font is None:
             font = System.get_font()[0]
-        return EText.from_str(text, font, size, System.get_font_style_config(), text_pos)
+        style_config = System.get_font_style_config().copy()
+        if font_size is not None:
+            style_config.base_size = font_size
+        return EText.from_str(text, font, size, style_config, text_pos)
 
 class WindowChoice(WindowBase):
     def __init__(self, rect: IntRect, cursor_height: int, cursor_width = None, column: int = 1, asset: Image = None, repeat: bool = False):
@@ -242,7 +245,7 @@ class WindowChoice(WindowBase):
         self.cursor_width = cursor_width
         self.cursor_height = cursor_height
         self.index = 0
-        self.items: List[Tuple[EText, Option[Callable[..., Any]]]] = []
+        self.items: List[Tuple[EText, Optional[Callable[..., Any]]]] = []
         self.active = True
 
     def rows(self) -> int:
@@ -251,7 +254,7 @@ class WindowChoice(WindowBase):
     def get_cursor_width(self):
         if self.cursor_width is not None:
             return self.cursor_width
-        return self.get_local_bounds().size.x // self.column - 32
+        return self.size.x // self.column - 32
 
     def update_cursor_rect(self):
         if len(self.items) == 0 or self.index < 0:
@@ -302,16 +305,17 @@ class WindowChoice(WindowBase):
                 self.index = (self.index + self.column) % len(self.items)
                 AudioMgr.play_sound(Config.cursor_se)
                 return
-        if GameInput.repeat(Keyboard.Key.Left, 0.1, delta_time):
-            if GameInput.trigger(Keyboard.Key.Left) or self.index > 0:
-                self.index = (self.index - 1 + len(self.items)) % len(self.items)
-                AudioMgr.play_sound(Config.cursor_se)
-                return
-        if GameInput.repeat(Keyboard.Key.Right, 0.1, delta_time):
-            if GameInput.trigger(Keyboard.Key.Right) or self.index < len(self.items) - 1:
-                self.index = (self.index + 1) % len(self.items)
-                AudioMgr.play_sound(Config.cursor_se)
-                return
+        if self.column > 1:
+            if GameInput.repeat(Keyboard.Key.Left, 0.1, delta_time):
+                if GameInput.trigger(Keyboard.Key.Left) or self.index > 0:
+                    self.index = (self.index - 1 + len(self.items)) % len(self.items)
+                    AudioMgr.play_sound(Config.cursor_se)
+                    return
+            if GameInput.repeat(Keyboard.Key.Right, 0.1, delta_time):
+                if GameInput.trigger(Keyboard.Key.Right) or self.index < len(self.items) - 1:
+                    self.index = (self.index + 1) % len(self.items)
+                    AudioMgr.play_sound(Config.cursor_se)
+                    return
 
     def _wheel_response(self, delta_time: float):
         if self.mouse_in_rect():
@@ -328,13 +332,12 @@ class WindowChoice(WindowBase):
         super().render_handle(delta_time)
         if self.content is not None:
             origin = self.content.get_origin()
-            size = self.get_local_bounds().size
-            if (self.index // self.column + 1) * self.cursor_height - origin.y > size.y - 32:
-                origin.y = (self.index // self.column + 1) * self.cursor_height - size.y + 32
+            if (self.index // self.column + 1) * self.cursor_height - origin.y > self.size.y - 32:
+                origin.y = (self.index // self.column + 1) * self.cursor_height - self.size.y + 32
             if (self.index // self.column) * self.cursor_height - origin.y < 0:
                 origin.y = (self.index // self.column) * self.cursor_height
-            if (self.index % self.column + 1) * (self.get_cursor_width() + 32) - origin.x > size.x - 32:
-                origin.x = (self.index % self.column + 1) * (self.get_cursor_width() + 32) - size.x + 32
+            if (self.index % self.column + 1) * (self.get_cursor_width() + 32) - origin.x > self.size.x - 32:
+                origin.x = (self.index % self.column + 1) * (self.get_cursor_width() + 32) - self.size.x + 32
             if (self.index % self.column) * (self.get_cursor_width() + 32) - origin.x < 0:
                 origin.x = (self.index % self.column) * (self.get_cursor_width() + 32)
 

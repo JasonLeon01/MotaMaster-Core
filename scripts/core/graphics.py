@@ -17,6 +17,9 @@ class GraphicsMgr:
         self._z_list = []
         self._drawable_to_z: Dict[Drawable, int] = {}
 
+    def has(self, drawable: Drawable):
+        return drawable in self._drawable_to_z
+
     def add(self, drawable: Drawable, z: int = 0):
         if drawable in self._drawable_to_z:
             raise ValueError('Drawable already exists.')

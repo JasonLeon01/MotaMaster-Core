@@ -6,7 +6,7 @@ from PySFBoost.sfSystem import Vector2f, Vector2u
 from PySFBoost.sfWindow import ContextSettings, Style, VideoMode
 from PySFBoost.sfGraphics import Color, Font, Image, RenderWindow
 from PySFBoost.TextEnhance import EText
-from PySFBoost.ResourceMgr import FontMgr, TextureMgr
+from PySFBoost.ResourceMgr import AudioMgr, FontMgr, TextureMgr
 from . import scene
 from .method import load_json_file
 
@@ -34,29 +34,25 @@ class System:
     _frame_rate = 30
     _vertical_sync = False
     _icon: Image = None
-    is_music_on = True
-    is_sound_on = True
-    is_voice_on = True
     current_scene: scene.SceneBase = None
     _variables: Dict[str, Any] = {}
 
     @classmethod
     def init(cls, inifile):
         iniconfig = ConfigParser()
+        cls.ini_file = inifile
         iniconfig.read(inifile)
         cls._title = Config.title_name
         cls._scale = iniconfig['Mota'].getfloat('Scale')
         cls._frame_rate = iniconfig['Mota'].getint('FrameRate')
         cls._vertical_sync = iniconfig['Mota'].getboolean('VerticalSync')
-        cls.is_music_on = iniconfig['Mota'].getboolean('MusicOn')
-        cls.is_sound_on = iniconfig['Mota'].getboolean('SoundOn')
-        cls.is_voice_on = iniconfig['Mota'].getboolean('VoiceOn')
+        AudioMgr.music_on = iniconfig['Mota'].getboolean('MusicOn')
+        AudioMgr.sound_on = iniconfig['Mota'].getboolean('SoundOn')
+        AudioMgr.voice_on = iniconfig['Mota'].getboolean('VoiceOn')
 
         cls._real_size = (cls._size * cls._scale).to_uint()
         cls.current_scene = None
-        context_settings = ContextSettings()
-        context_settings.antiAliasingLevel = 8
-        cls.window = RenderWindow(VideoMode(cls._real_size), cls._title, Style.Titlebar | Style.Close, settings=context_settings)
+        cls.window = RenderWindow(VideoMode(cls._real_size), cls._title, Style.Titlebar | Style.Close, settings=ContextSettings())
         ico_image = TextureMgr.system(Config.title_icon).copy_to_image()
         cls.window.set_icon(ico_image)
         TextureMgr.release_system(Config.title_icon)
@@ -140,6 +136,21 @@ class System:
         if name in cls._variables:
             return cls._variables[name]
         return 0
+
+    @classmethod
+    def save_ini(cls):
+        iniconfig = ConfigParser()
+        iniconfig['Mota'] = {
+            'Script': 'main.py',
+            'Scale': str(cls._scale),
+            'FrameRate': str(cls._frame_rate),
+            'VerticalSync': str(cls._vertical_sync),
+            'MusicOn': str(AudioMgr.music_on),
+            'SoundOn': str(AudioMgr.sound_on),
+            'VoiceOn': str(AudioMgr.voice_on)
+        }
+        with open(cls.ini_file, 'w') as f:
+            iniconfig.write(f)
 
 class Config:
     title_name: str

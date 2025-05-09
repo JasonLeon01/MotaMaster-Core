@@ -1,33 +1,37 @@
-from PySFBoost import *
-from scripts.core import *
+from PySFBoost.Time import TimeMgr
+from PySFBoost.ResourceMgr import TextureMgr, FontMgr, AudioMgr
+from scripts.core.system import System, Config
 from scripts.core.graphics import Graphics
 from scripts.scene import *
 
 def setup():
-    system.Config.init(['data/configs/system.json', 'data/configs/audio.json'])
-    system.System.init('mota.ini')
-    Time.TimeMgr.init()
-    graphics.Graphics.init()
-    graphics.Graphics.freeze()
-    system.System.current_scene = title.Scene()
+    Config.init(['data/configs/system.json', 'data/configs/audio.json'])
+    System.init('mota.ini')
+    TimeMgr.init()
+    Graphics.init()
+    Graphics.freeze()
+    System.current_scene = title.Scene()
 
 def clear():
+    System.window.clear()
+    System.window.display()
+
     Graphics.clear()
-    ResourceMgr.TextureMgr.clear()
-    ResourceMgr.FontMgr.clear()
-    ResourceMgr.AudioMgr.clear()
+    TextureMgr.clear()
+    FontMgr.clear()
+    AudioMgr.clear()
 
 def main():
     setup()
-    if system.System.current_scene is not None:
-        system.System.current_scene.main()
+    if System.current_scene is not None:
+        System.current_scene.main()
 
-    graphics.Graphics.transition(1)
-    while graphics.Graphics.transition_duration > 0:
-        delta_time = Time.TimeMgr.get_delta_time().as_seconds()
-        graphics.Graphics.update(delta_time)
-        ResourceMgr.AudioMgr.update()
-        system.System.window.display()
+    Graphics.transition(1)
+    while Graphics.transition_duration > 0:
+        delta_time = TimeMgr.get_delta_time().as_seconds()
+        Graphics.update(delta_time)
+        AudioMgr.update()
+        System.window.display()
 
     clear()
 
