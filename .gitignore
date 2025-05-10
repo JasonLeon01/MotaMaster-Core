@@ -6,3 +6,4 @@
 *.mtpak
 *.zip
 .DS_Store
+/mota_venv

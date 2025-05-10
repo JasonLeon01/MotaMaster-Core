@@ -1,7 +1,7 @@
-from PySFBoost.Time import TimeMgr
-from PySFBoost.ResourceMgr import TextureMgr, FontMgr, AudioMgr
-from scripts.core.system import System, Config
-from scripts.core.graphics import Graphics
+from PySFBoost.Time import *
+from PySFBoost.ResourceMgr import *
+from scripts.core.system import *
+from scripts.core.graphics import *
 from scripts.scene import *
 
 def setup():

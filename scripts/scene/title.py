@@ -1,10 +1,10 @@
-from PySFBoost.ResourceMgr import AudioMgr, TextureMgr
-from PySFBoost.sfSystem import Vector2f, Vector2u
-from PySFBoost.sfGraphics import Sprite
-from scripts.core.scene import SceneBase
-from scripts.core.system import Config, System
-from scripts.core.window import WindowCommand
-from scripts.core.graphics import Graphics
+from PySFBoost.ResourceMgr import *
+from PySFBoost.sfSystem import *
+from PySFBoost.sfGraphics import *
+from scripts.core.scene import *
+from scripts.core.system import *
+from scripts.core.window import *
+from scripts.core.graphics import *
 
 from scripts.components.config import WindowConfig
 

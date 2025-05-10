@@ -2,11 +2,10 @@ from functools import partial
 import logging
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from PySFBoost import sfGraphics, sfSystem
-from PySFBoost.sfWindow import Event
-from PySFBoost.Time import TimeMgr
-from PySFBoost.ResourceMgr import AudioMgr
-from .inputs import GameInput
+from PySFBoost.sfWindow import *
+from PySFBoost.Time import *
+from PySFBoost.ResourceMgr import *
+from .inputs import *
 
 class SceneBase:
     def __init__(self):
@@ -71,7 +70,6 @@ class SceneBase:
         from .graphics import Graphics
         Graphics.animation_mgr.update(delta_time)
         Graphics.particle_mgr.update(delta_time)
-        Graphics.video_mgr.update(delta_time)
         Graphics.update(delta_time)
 
     def audio_handle(self, delta_time: float):

@@ -1,15 +1,12 @@
 import bisect
 import os
 from typing import Dict, List
-from PySFBoost import sfGraphics
-from PySFBoost.TextEnhance import EText
-from PySFBoost.sfSystem import Vector2f, Vector2u
-from PySFBoost.sfGraphics import Color, Drawable, RenderTarget, RenderTexture, Sprite, Text, Texture
-from PySFBoost.Animation import AnimationMgr
-from PySFBoost.Particle import ParticleMgr
-from PySFBoost.Video import VideoMgr
-from PySFBoost.Time import TimeMgr
-from .system import System
+from PySFBoost.sfSystem import *
+from PySFBoost.sfGraphics import *
+from PySFBoost.Animation import *
+from PySFBoost.Particle import *
+from PySFBoost.Time import *
+from .system import *
 
 class GraphicsMgr:
     def __init__(self):
@@ -60,7 +57,6 @@ class Graphics:
     graphics_mgr = GraphicsMgr()
     animation_mgr = AnimationMgr()
     particle_mgr = ParticleMgr()
-    video_mgr = VideoMgr()
 
     _frame_count = 0
     _debug_text: Text = None
@@ -101,8 +97,6 @@ class Graphics:
                 cls.animation_mgr.display(cls._canvas, z)
             if z in particle_z_list:
                 cls.particle_mgr.display(cls._canvas, z)
-
-        cls.video_mgr.display(cls._canvas)
 
         if cls._freeze_sprite is not None and cls._freeze_sprite.get_color().a > 0:
             speed = 255 * cls.transition_duration * delta_time

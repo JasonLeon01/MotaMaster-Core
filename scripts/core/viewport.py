@@ -1,11 +1,10 @@
 from functools import partial
-import imp
 import traceback
 from concurrent.futures import ThreadPoolExecutor
-from PySFBoost.Animation import AnimationMgr
-from PySFBoost.Particle import ParticleMgr
-from PySFBoost.sfGraphics import RenderTexture, Sprite, Color, IntRect, View
-from .graphics import GraphicsMgr
+from PySFBoost.Animation import *
+from PySFBoost.Particle import *
+from PySFBoost.sfGraphics import *
+from .graphics import *
 
 class Viewport(Sprite):
     def __init__(self, rect: IntRect):

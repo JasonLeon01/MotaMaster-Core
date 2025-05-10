@@ -1,13 +1,13 @@
 import math
 from typing import Any, Callable, Dict, List, Optional, Tuple
-from PySFBoost.ResourceMgr import TextureMgr, AudioMgr
-from PySFBoost.sfSystem import Vector2f, Vector2i, Vector2u
-from PySFBoost.sfGraphics import Color, FloatRect, Image, IntRect, RenderTarget, RenderTexture, Sprite, Texture, Font, View
-from PySFBoost.sfWindow import Keyboard, Mouse
-from PySFBoost.TextEnhance import EText
-from .viewport import Viewport
-from .system import Config, System
-from .inputs import GameInput
+from PySFBoost.ResourceMgr import *
+from PySFBoost.sfSystem import *
+from PySFBoost.sfGraphics import *
+from PySFBoost.sfWindow import *
+from PySFBoost.TextEnhance import *
+from .viewport import *
+from .system import *
+from .inputs import *
 
 class Window(Viewport):
     def __init__(self, rect: IntRect, asset: Image = None, repeat: bool = False):

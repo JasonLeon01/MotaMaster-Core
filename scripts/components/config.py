@@ -1,12 +1,12 @@
 from operator import index
-from PySFBoost.ResourceMgr import AudioMgr
-from PySFBoost.sfSystem import Vector2u, Vector2f
-from PySFBoost.sfGraphics import IntRect
-from scripts.core import window
-from scripts.core.viewport import Viewport
-from scripts.core.system import Config, System
-from scripts.core.window import Keyboard
-from scripts.core.inputs import GameInput
+from PySFBoost.ResourceMgr import *
+from PySFBoost.sfSystem import *
+from PySFBoost.sfGraphics import *
+from scripts.core import *
+from scripts.core.viewport import *
+from scripts.core.system import *
+from scripts.core.window import *
+from scripts.core.inputs import *
 
 class WindowConfig(window.WindowChoice):
     def __init__(self, x: int = 0, y: int = 0):

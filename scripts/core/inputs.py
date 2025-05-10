@@ -1,4 +1,4 @@
-from PySFBoost.sfWindow import Joystick, Keyboard, Mouse
+from PySFBoost.sfWindow import *
 
 class GameInput:
     _keys_hash = {}

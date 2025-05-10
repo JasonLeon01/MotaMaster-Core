@@ -1,5 +1,5 @@
-from PySFBoost.sfGraphics import IntRect, Sprite, Texture
-from PySFBoost.sfSystem import Vector2i
+from PySFBoost.sfGraphics import *
+from PySFBoost.sfSystem import *
 
 class Plane(Sprite):
     def __init__(self, texture: Texture, size: Vector2i):

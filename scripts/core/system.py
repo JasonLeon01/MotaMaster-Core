@@ -2,12 +2,12 @@ import os
 from configparser import ConfigParser
 from typing import Any, Dict, List
 
-from PySFBoost import sfGraphics
-from PySFBoost.sfSystem import Vector2f, Vector2u
-from PySFBoost.sfWindow import ContextSettings, Style, VideoMode
-from PySFBoost.sfGraphics import Color, Font, Image, RenderWindow
-from PySFBoost.TextEnhance import EText
-from PySFBoost.ResourceMgr import AudioMgr, FontMgr, TextureMgr
+from PySFBoost import *
+from PySFBoost.sfSystem import *
+from PySFBoost.sfWindow import *
+from PySFBoost.sfGraphics import *
+from PySFBoost.TextEnhance import *
+from PySFBoost.ResourceMgr import *
 from . import scene
 from .method import load_json_file
 
