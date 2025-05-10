@@ -2,6 +2,7 @@ import os
 from configparser import ConfigParser
 from typing import Any, Dict, List
 
+from PySFBoost import sfGraphics
 from PySFBoost.sfSystem import Vector2f, Vector2u
 from PySFBoost.sfWindow import ContextSettings, Style, VideoMode
 from PySFBoost.sfGraphics import Color, Font, Image, RenderWindow
@@ -87,6 +88,7 @@ class System:
         cls._scale = scale
         cls._real_size = (cls._size * cls._scale).to_uint()
         cls.window.set_size(cls._real_size)
+        cls.window.set_view(sfGraphics.View(sfGraphics.FloatRect((0, 0, cls._real_size.x, cls._real_size.y))))
 
     @classmethod
     def get_title(cls) -> str:
