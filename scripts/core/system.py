@@ -53,9 +53,12 @@ class System:
 
         cls._real_size = (cls._size * cls._scale).to_uint()
         cls.current_scene = None
-        cls.window = RenderWindow(VideoMode(cls._real_size), cls._title, Style.Titlebar | Style.Close, settings=ContextSettings())
+        settings = ContextSettings()
+        settings.antiAliasingLevel = 8
+        cls.window = RenderWindow(VideoMode(cls._real_size), cls._title, Style.Titlebar | Style.Close, settings=settings)
         ico_image = TextureMgr.system(Config.title_icon).copy_to_image()
         cls.window.set_icon(ico_image)
+        cls.window.set_view(sfGraphics.View(sfGraphics.FloatRect((0, 0, cls._size.x, cls._size.y))))
         TextureMgr.release_system(Config.title_icon)
         cls.window.set_framerate_limit(cls._frame_rate)
         cls.window.set_vertical_sync_enabled(cls._vertical_sync)
@@ -88,7 +91,7 @@ class System:
         cls._scale = scale
         cls._real_size = (cls._size * cls._scale).to_uint()
         cls.window.set_size(cls._real_size)
-        cls.window.set_view(sfGraphics.View(sfGraphics.FloatRect((0, 0, cls._real_size.x, cls._real_size.y))))
+        cls.window.set_view(sfGraphics.View(sfGraphics.FloatRect((0, 0, cls._size.x, cls._size.y))))
 
     @classmethod
     def get_title(cls) -> str:

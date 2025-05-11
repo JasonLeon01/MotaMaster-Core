@@ -63,40 +63,23 @@ class Graphics:
     _freeze_image: Texture = None
     _freeze_sprite: Sprite = None
 
-    _canvas: RenderTexture = None
-    _canvas_sprite: Sprite = None
     transition_duration: float = 0.0
 
     @classmethod
-    def init(cls):
-        cls._canvas = RenderTexture(System.get_size().to_uint())
-        cls._canvas.set_smooth(True)
-        cls._canvas_sprite = Sprite(cls._canvas.get_texture())
-        cls._canvas.clear(Color.black())
-        cls._canvas.display()
-
-        cls._freeze_image: Texture = Texture(System.get_size().to_uint())
-        cls._freeze_sprite: Sprite = Sprite(cls._freeze_image)
-
-    @classmethod
     def update(cls, delta_time: float):
-        if cls._canvas_sprite.get_scale().x != System.get_scale():
-            scale = System.get_scale()
-            cls._canvas_sprite.set_scale(Vector2f(scale, scale))
-
         cls._frame_count += 1
-        cls._canvas.clear(Color.transparent())
+        System.window.clear(Color.transparent())
         graphics_z_list = cls.graphics_mgr.get_z_list()
         animation_z_list = cls.animation_mgr.get_z_list()
         particle_z_list = cls.particle_mgr.get_z_list()
         z_list = sorted(set(graphics_z_list + animation_z_list + particle_z_list))
         for z in z_list:
             if z in graphics_z_list:
-                cls.graphics_mgr.display(cls._canvas, z)
+                cls.graphics_mgr.display(System.window, z)
             if z in animation_z_list:
-                cls.animation_mgr.display(cls._canvas, z)
+                cls.animation_mgr.display(System.window, z)
             if z in particle_z_list:
-                cls.particle_mgr.display(cls._canvas, z)
+                cls.particle_mgr.display(System.window, z)
 
         if cls._freeze_sprite is not None and cls._freeze_sprite.get_color().a > 0:
             speed = 255 * cls.transition_duration * delta_time
@@ -104,16 +87,13 @@ class Graphics:
                 cls._freeze_sprite.set_color(Color(255, 255, 255, int(cls._freeze_sprite.get_color().a - speed)))
             else:
                 cls._freeze_sprite.set_color(Color(255, 255, 255, 0))
-            cls._canvas.draw(cls._freeze_sprite)
+            System.window.draw(cls._freeze_sprite)
 
         if cls._freeze_sprite is not None and cls._freeze_sprite.get_color().a == 0:
             cls.transition_duration = 0.0
 
         if os.environ.get('DEBUG') == 'True':
-            cls.debug_info(cls._canvas, delta_time)
-
-        cls._canvas.display()
-        System.window.draw(cls._canvas_sprite)
+            cls.debug_info(System.window, delta_time)
 
     @classmethod
     def debug_info(cls, target: RenderTarget, delta_time: float):
@@ -137,7 +117,11 @@ class Graphics:
 
     @classmethod
     def freeze(cls):
-        cls._freeze_image.update(cls._canvas.get_texture())
+        if cls._freeze_image is None or cls._freeze_image.get_size() != System.window.get_size():
+            cls._freeze_image = Texture(System.window.get_size())
+            cls._freeze_sprite = Sprite(cls._freeze_image)
+            cls._freeze_sprite.set_scale(Vector2f(1.0 / System.get_scale(), 1.0 / System.get_scale()))
+        cls._freeze_image.update(System.window)
         cls._freeze_sprite.set_color(Color(255, 255, 255, 255))
 
     @classmethod

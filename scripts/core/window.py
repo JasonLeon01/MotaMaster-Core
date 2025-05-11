@@ -220,7 +220,7 @@ class WindowBase(Window):
     def mouse_in_local(self) -> Vector2i:
         mouse_x, mouse_y = Mouse.get_position(System.window)
         mouse_pos = Vector2i(mouse_x, mouse_y)
-        mouse_pos = (mouse_pos.to_float() / System.get_scale()).to_int()
+        mouse_pos = (mouse_pos.to_float()).to_int()
         world_pos = System.window.map_pixel_to_coords(mouse_pos)
         local_pos = self.get_inverse_transform().transform_point(world_pos)
         texture_rect = self.get_texture_rect()

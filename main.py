@@ -8,7 +8,6 @@ def setup():
     Config.init(['data/configs/system.json', 'data/configs/audio.json'])
     System.init('mota.ini')
     TimeMgr.init()
-    Graphics.init()
     Graphics.freeze()
     System.current_scene = title.Scene()
 
