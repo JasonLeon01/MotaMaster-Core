@@ -40,7 +40,8 @@ class Window(Viewport):
         else:
             self._window_back_sprite.set_scale(Vector2f(rect.size.x / 128.0, rect.size.y / 128.0))
 
-        self.content: Viewport = None
+        self.content: RenderTexture = None
+        self._content_sprite: Sprite = None
 
         self._cached_corner: Dict[str, List[Texture]] = {}
         self._cached_edges: Dict[str, List[Texture]] = {}
@@ -82,20 +83,19 @@ class Window(Viewport):
         return self.get_local_bounds().size
 
     def render_handle(self, delta_time: float):
-        if self.content is not None:
-            self.content.clear()
-            self.content.render_handle(delta_time)
-            self.content.display()
         self._window_back_sprite.set_color(Color(255, 255, 255, self.back_opacity))
         self._canvas.draw(self._window_back_sprite)
         self._canvas.draw(self._window_edge_sprite)
 
         if self.content is not None:
-            self.content.set_color(Color(255, 255, 255, self.content_opacity))
+            if self._content_sprite is None:
+                self._content_sprite = Sprite(self.content.get_texture())
+
+            self._content_sprite.set_color(Color(255, 255, 255, self.content_opacity))
             content_view_size = self._content_view_size()
-            self.content.set_view(View(FloatRect(self.content.get_origin(), content_view_size)))
-            self.content.set_position(Vector2f(16 + self.content.get_origin().x, 16 + self.content.get_origin().y))
-            self._canvas.draw(self.content)
+            self._content_sprite.set_texture_rect(IntRect(self._content_sprite.get_origin().to_int(), content_view_size))
+            self._content_sprite.set_position(Vector2f(16 + self._content_sprite.get_origin().x, 16 + self._content_sprite.get_origin().y))
+            self._canvas.draw(self._content_sprite)
 
         if self._rect is not None:
             opacity = self._rect_sprite.get_color().a
@@ -208,7 +208,7 @@ class Window(Viewport):
         self._rect.display()
 
     def _content_view_size(self):
-        return Vector2f(self.size.x - 32, self.size.y - 32)
+        return Vector2i(self.size.x - 32, self.size.y - 32)
 
 class WindowBase(Window):
     def mouse_in_rect(self) -> bool:
@@ -228,6 +228,15 @@ class WindowBase(Window):
         tex_x = (local_pos.x - texture_rect.left()) / texture_rect.width() * texture_size.x
         tex_y = (local_pos.y - texture_rect.top()) / texture_rect.height() * texture_size.y
         return Vector2i(tex_x, tex_y)
+
+    def on_click(self, mouse_pos: Vector2i):
+        pass
+
+    def logic_handle(self, delta_time: float):
+        if self.mouse_in_rect():
+            if GameInput.left_click():
+                self.on_click(self.mouse_in_local())
+        super().logic_handle(delta_time)
 
     @staticmethod
     def from_str(text: str, size: Vector2u, font: Font = None, font_size: Optional[int] = None, text_pos: int = 0):
@@ -264,27 +273,29 @@ class WindowChoice(WindowBase):
         x = (self.index % self.column) * (self.get_cursor_width() + 32) + 16
         y = row * self.cursor_height + 16
         if self.content is not None:
-            y -= self.content.get_origin().y
+            y -= self._content_sprite.get_origin().y
         self.set_rect(IntRect(Vector2i(x, y), Vector2i(self.get_cursor_width(), self.cursor_height)))
+
+    def on_click(self, mouse_pos: Vector2i):
+        texture_size = self.get_texture().get_size()
+        if (mouse_pos.x >= 16 and mouse_pos.x <= texture_size.x - 16 and mouse_pos.y >= 16 and mouse_pos.y <= texture_size.y - 16):
+            actual_y = mouse_pos.y - 16 - self._content_sprite.get_origin().y
+            actual_x = mouse_pos.x - 16 - self._content_sprite.get_origin().x
+            row = actual_y // self.cursor_height
+            col = actual_x // (self.get_cursor_width() + 32)
+            index = int(row * self.column + col)
+            if index < len(self.items):
+                if index != self.index:
+                    self.index = index
+                    AudioMgr.play_sound(Config.cursor_se)
+                else:
+                    _, callback = self.items[self.index]
+                    if callable(callback):
+                        callback()
 
     def confirm(self):
         if GameInput.trigger(Keyboard.Key.Enter) or GameInput.trigger(Keyboard.Key.Space):
             return True
-        if GameInput.left_click():
-            mouse_pos = self.mouse_in_local()
-            texture_size = self.get_texture().get_size()
-            if (mouse_pos.x >= 16 and mouse_pos.x <= texture_size.x - 16 and mouse_pos.y >= 16 and mouse_pos.y <= texture_size.y - 16):
-                actual_y = mouse_pos.y - 16 - self.content.get_origin().y
-                actual_x = mouse_pos.x - 16 - self.content.get_origin().x
-                row = actual_y // self.cursor_height
-                col = actual_x // (self.get_cursor_width() + 32)
-                index = int(row * self.column + col)
-                if index < len(self.items):
-                    if index != self.index:
-                        self.index = index
-                        AudioMgr.play_sound(Config.cursor_se)
-                    else:
-                        return True
         return False
 
     def cancel(self):
@@ -331,7 +342,7 @@ class WindowChoice(WindowBase):
     def render_handle(self, delta_time):
         super().render_handle(delta_time)
         if self.content is not None:
-            origin = self.content.get_origin()
+            origin = self._content_sprite.get_origin()
             if (self.index // self.column + 1) * self.cursor_height - origin.y > self.size.y - 32:
                 origin.y = (self.index // self.column + 1) * self.cursor_height - self.size.y + 32
             if (self.index // self.column) * self.cursor_height - origin.y < 0:
@@ -341,8 +352,8 @@ class WindowChoice(WindowBase):
             if (self.index % self.column) * (self.get_cursor_width() + 32) - origin.x < 0:
                 origin.x = (self.index % self.column) * (self.get_cursor_width() + 32)
 
-            if origin.y != self.content.get_origin().y or origin.x!= self.content.get_origin().x:
-                self.content.set_origin(origin)
+            if origin.y != self._content_sprite.get_origin().y or origin.x!= self._content_sprite.get_origin().x:
+                self._content_sprite.set_origin(origin)
         self.update_cursor_rect()
 
     def logic_handle(self, delta_time: float):
@@ -352,9 +363,9 @@ class WindowChoice(WindowBase):
 
         self._key_response(delta_time)
         self._wheel_response(delta_time)
-        if self.confirm():
-            _, callback = self.items[self.index]
-            if callable(callback):
+        _, callback = self.items[self.index]
+        if callable(callback):
+            if self.confirm():
                 callback()
 
 class WindowCommand(WindowChoice):
@@ -362,11 +373,12 @@ class WindowCommand(WindowChoice):
         height = 32 * (len(commands) + 1)
         super().__init__(IntRect((0, 0, width, height)), 32, None, 1, asset, repeat)
         self.items = commands
-        self.content = Viewport(IntRect((0, 0, width - 32, height - 32)))
+        self.content = RenderTexture(Vector2u(width - 32, height - 32))
         self.refresh()
 
     def refresh(self):
-        self.content.graphics_mgr.clear()
+        self.content.clear(Color.transparent())
         for i, (text, _) in enumerate(self.items):
             text.set_position(Vector2f(0, i * 32))
-            self.content.graphics_mgr.add(text)
+            self.content.draw(text)
+        self.content.display()
