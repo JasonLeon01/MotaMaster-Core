@@ -35,6 +35,12 @@ class Window(Viewport):
         self.rect_opacity = (128, 255)
         self._fade_in = False
 
+        self._window_hint_sprite: List[Sprite] = []
+        self._pause_hint_sprite: Sprite = None
+        self._pause_progress = 0.0
+        self.pause_speed = 2.5
+        self.pause = False
+
         if self._repeat:
             self._window_back_sprite.set_texture_rect(IntRect(Vector2i(0, 0), self.get_local_bounds().size.to_int()))
         else:
@@ -45,6 +51,7 @@ class Window(Viewport):
 
         self._cached_corner: Dict[str, List[Texture]] = {}
         self._cached_edges: Dict[str, List[Texture]] = {}
+        self._cached_hints: Dict[str, List[Texture]] = {}
         self._presave(self._cached_corner, {
                 'window': [
                     IntRect((128, 0, 16, 16)),
@@ -75,7 +82,20 @@ class Window(Viewport):
                 ]
             }
         )
+        self._presave(self._cached_hints, {
+                'window_hint': [
+                    IntRect((152, 16, 16, 8)),
+                    IntRect((144, 24, 8, 16)),
+                    IntRect((152, 40, 16, 8)),
+                    IntRect((168, 24, 8, 16))
+                ],
+                'pause_hint': [
+                    IntRect((160, 64, 32, 32))
+                ]
+        })
+
         self._render_sides()
+        self._render_hints()
         self.render_count = 0
 
     @property
@@ -93,9 +113,23 @@ class Window(Viewport):
 
             self._content_sprite.set_color(Color(255, 255, 255, self.content_opacity))
             content_view_size = self._content_view_size()
-            self._content_sprite.set_texture_rect(IntRect(self._content_sprite.get_origin().to_int(), content_view_size))
+            content_origin = self._content_sprite.get_origin().to_int()
+            self._content_sprite.set_texture_rect(IntRect(content_origin, content_view_size))
             self._content_sprite.set_position(Vector2f(16 + self._content_sprite.get_origin().x, 16 + self._content_sprite.get_origin().y))
             self._canvas.draw(self._content_sprite)
+
+            if content_origin.y > 0:
+                self._window_hint_sprite[0].set_position(Vector2f((self.size.x - 16) / 2, 4))
+                self._canvas.draw(self._window_hint_sprite[0])
+            if content_origin.x > 0:
+                self._window_hint_sprite[1].set_position(Vector2f(4, (self.size.y - 16) / 2))
+                self._canvas.draw(self._window_hint_sprite[1])
+            if not self.pause and content_origin.y + content_view_size.y < self.content.get_size().y:
+                self._window_hint_sprite[2].set_position(Vector2f((self.size.x - 16) / 2, self.size.y - 12))
+                self._canvas.draw(self._window_hint_sprite[2])
+            if content_origin.x + content_view_size.x < self.content.get_size().x:
+                self._window_hint_sprite[3].set_position(Vector2f(self.size.x - 12, (self.size.y - 16) / 2))
+                self._canvas.draw(self._window_hint_sprite[3])
 
         if self._rect is not None:
             opacity = self._rect_sprite.get_color().a
@@ -114,11 +148,23 @@ class Window(Viewport):
             self._rect_sprite.set_color(Color(255, 255, 255, int(opacity)))
             self._canvas.draw(self._rect_sprite)
 
+        if self.pause:
+            self._pause_hint_sprite.set_position(Vector2f((self.size.x - 16) / 2, self.size.y - 16))
+            self._pause_progress += self.pause_speed * delta_time
+
+            if self._pause_progress > 4:
+                self._pause_progress = 0.0
+            x = (int(self._pause_progress) % 2) * 16
+            y = (int(self._pause_progress) // 2) * 16
+
+            target_rect = IntRect((x, y, 16, 16))
+            self._pause_hint_sprite.set_texture_rect(target_rect)
+            self._canvas.draw(self._pause_hint_sprite)
+
         super().render_handle(delta_time)
 
     def set_window_rect(self, rect: IntRect):
         self._canvas = RenderTexture(rect.size.to_uint())
-        self._canvas.set_smooth(True)
         self.set_texture(self._canvas.get_texture())
         self.set_texture_rect(IntRect(Vector2i(0, 0), rect.size.to_int()))
         self._window_edge = RenderTexture(rect.size.to_uint())
@@ -139,7 +185,7 @@ class Window(Viewport):
     def _presave(self, target: Dict[str, List[Texture]], area_rects: Dict[str, List[IntRect]]):
         for type_, area in area_rects.items():
             target[type_] = []
-            for i in range(4):
+            for (i, _) in enumerate(area):
                 sub_texture = Texture(self._asset, False, area[i])
                 target[type_].append(sub_texture)
 
@@ -181,6 +227,14 @@ class Window(Viewport):
         self._render_edge(self._window_edge, self._cached_edges['window'], target_scales, edge_positions)
         self._window_edge.display()
 
+    def _render_hints(self):
+        self._window_hint_sprite = [
+            Sprite(window_hint)
+            for window_hint in self._cached_hints['window_hint']
+        ]
+        self._pause_hint_sprite = Sprite(self._cached_hints['pause_hint'][0])
+        self._pause_hint_sprite.set_texture_rect(IntRect(Vector2i(0, 0), Vector2i(16, 16)))
+
     def _render_rect(self, size: Vector2u):
         corner_positions = [
             Vector2f(0, 0),
@@ -209,6 +263,9 @@ class Window(Viewport):
 
     def _content_view_size(self):
         return Vector2i(self.size.x - 32, self.size.y - 32)
+
+    def centre(self):
+        self.set_origin(self.size / 2.0)
 
 class WindowBase(Window):
     def mouse_in_rect(self) -> bool:
@@ -248,7 +305,7 @@ class WindowBase(Window):
         return EText.from_str(text, font, size, style_config, text_pos)
 
 class WindowChoice(WindowBase):
-    def __init__(self, rect: IntRect, cursor_height: int, cursor_width = None, column: int = 1, asset: Image = None, repeat: bool = False):
+    def __init__(self, rect: IntRect, cursor_height: int = 32, cursor_width = None, column: int = 1, asset: Image = None, repeat: bool = False):
         super().__init__(rect, asset, repeat)
         self.column = column
         self.cursor_width = cursor_width
@@ -376,9 +433,10 @@ class WindowCommand(WindowChoice):
         self.content = RenderTexture(Vector2u(width - 32, height - 32))
         self.refresh()
 
+
     def refresh(self):
         self.content.clear(Color.transparent())
         for i, (text, _) in enumerate(self.items):
             text.set_position(Vector2f(0, i * 32))
-            self.content.draw(text)
+            self.content.draw(text, EText.text_render_state())
         self.content.display()

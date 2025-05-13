@@ -11,17 +11,23 @@ from scripts.components.config import WindowConfig
 class Scene(SceneBase):
     def __init__(self):
         self.sprite = Sprite(TextureMgr.system('GrassBackground.png'))
+        texts = [
+            ('新游戏', self.new_game),
+            ('加载游戏', self.load_game),
+            ('设置', self.setting),
+            ('退出', self.exit_game)
+        ]
+        if (os.path.exists('./save/default.sav')):
+            texts.insert(0, ('进入游戏', self.enter_game))
         self.command_window = WindowCommand(288, [
-            (WindowCommand.from_str('新游戏', Vector2u(256, 32), text_pos=1), self.new_game),
-            (WindowCommand.from_str('加载游戏', Vector2u(256, 32), text_pos=1), self.load_game),
-            (WindowCommand.from_str('设置', Vector2u(256, 32), text_pos=1), self.setting),
-            (WindowCommand.from_str('退出', Vector2u(256, 32), text_pos=1), self.exit_game),
+            (WindowCommand.from_str(text, Vector2u(256, 32), text_pos=1), callback)
+            for text, callback in texts
         ])
-        self.command_window.set_origin(Vector2f(144, 64))
+        self.command_window.centre()
         self.command_window.set_position(Vector2f(320, 320))
 
-        self.config_window = WindowConfig(320, 320)
-        self.config_window.set_origin(Vector2f(144, 64))
+        self.config_window = WindowConfig(320, 320, 32 * (len(texts) + 1))
+        self.config_window.centre()
 
         super().__init__()
 
@@ -51,6 +57,10 @@ class Scene(SceneBase):
                 Graphics.graphics_mgr.add(self.command_window, 0)
                 System.save_ini()
         return super().logic_handle(delta_time)
+
+    def enter_game(self):
+        print('enter game')
+        AudioMgr.play_sound(Config.decision_se)
 
     def new_game(self):
         print('new game')

@@ -8,25 +8,28 @@ from scripts.core.window import *
 from scripts.core.inputs import *
 
 class WindowConfig(window.WindowChoice):
-    def __init__(self, x: int = 0, y: int = 0):
-        rect = IntRect((x, y, 288, 160))
-        super().__init__(rect, 28)
+    def __init__(self, x: int = 0, y: int = 0, height: int = 160):
+        rect = IntRect((x, y, 288, height))
+        super().__init__(rect, 32)
+        texts = [
+            '窗口大小：',
+            '帧率：',
+            '音乐：',
+            '音效：',
+            '语音：'
+        ]
+
         self.items = [
-            (WindowConfig.from_str('窗口大小：', Vector2u(128, 28), font_size=20), None),
-            (WindowConfig.from_str('帧率：', Vector2u(128, 28), font_size=20), None),
-            (WindowConfig.from_str('音乐：', Vector2u(128, 28), font_size=20), None),
-            (WindowConfig.from_str('音效：', Vector2u(128, 28), font_size=20), None),
-            (WindowConfig.from_str('语音：', Vector2u(128, 28), font_size=20), None),
+            (WindowConfig.from_str(text, Vector2u(128, self.cursor_height), text_pos=1), None)
+            for text in texts
         ]
         self.values = [
-            (WindowConfig.from_str('', Vector2u(128, 28), font_size=20, text_pos=1), None),
-            (WindowConfig.from_str('', Vector2u(128, 28), font_size=20, text_pos=1), None),
-            (WindowConfig.from_str('', Vector2u(128, 28), font_size=20, text_pos=1), None),
-            (WindowConfig.from_str('', Vector2u(128, 28), font_size=20, text_pos=1), None),
-            (WindowConfig.from_str('', Vector2u(128, 28), font_size=20, text_pos=1), None),
+            (WindowConfig.from_str('', Vector2u(128, self.cursor_height), text_pos=1), None)
+            for _ in texts
         ]
+
         size = self.size.to_int()
-        self.content = RenderTexture(Vector2u(size.x - 32, len(self.items) * 28))
+        self.content = RenderTexture(Vector2u(size.x - 32, len(self.items) * 32))
         self.window_scale = System.get_scale()
         self.refresh()
 
@@ -100,7 +103,7 @@ class WindowConfig(window.WindowChoice):
 
         for i in range(5):
             text, _ = self.items[i]
-            text.set_position(Vector2f(0, 28 * i))
+            text.set_position(Vector2f(0, self.cursor_height * i))
             self.content.draw(text)
 
             text, _ = self.values[i]
@@ -108,7 +111,7 @@ class WindowConfig(window.WindowChoice):
             if text.get_text() != now_text:
                 text.set_text(now_text)
                 text.render()
-            text.set_position(Vector2f(128, 28 * i))
+            text.set_position(Vector2f(128, self.cursor_height * i))
             self.content.draw(text)
 
         self.content.display()
