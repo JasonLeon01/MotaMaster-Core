@@ -11,6 +11,10 @@ from scripts.components.config import WindowConfig
 class Scene(SceneBase):
     def __init__(self):
         self.sprite = Sprite(TextureMgr.system('GrassBackground.png'))
+        self.title = GameWindow.from_str('\s[48]**MOTAMASTER**\s[18]\nmota\_python\_framework', Vector2u(480, 96), text_pos=1)
+        self.title.set_origin(Vector2f(240, 48))
+        self.title.set_position(Vector2f(320, 96))
+
         texts = [
             ('新游戏', self.new_game),
             ('加载游戏', self.load_game),
@@ -26,13 +30,14 @@ class Scene(SceneBase):
         self.command_window.centre()
         self.command_window.set_position(Vector2f(320, 320))
 
-        self.config_window = WindowConfig(320, 320, 32 * (len(texts) + 1))
+        self.config_window = WindowConfig(320, 320, 192)
         self.config_window.centre()
 
         super().__init__()
 
     def on_start(self):
         Graphics.graphics_mgr.add(self.sprite, 0)
+        Graphics.graphics_mgr.add(self.title, 0)
         Graphics.graphics_mgr.add(self.command_window, 0)
 
     def on_stop(self):

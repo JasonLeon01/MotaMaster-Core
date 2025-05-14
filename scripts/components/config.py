@@ -31,6 +31,8 @@ class WindowConfig(window.WindowChoice):
         size = self.size.to_int()
         self.content = RenderTexture(Vector2u(size.x - 32, len(self.items) * 32))
         self.window_scale = System.get_scale()
+        self.left_arrow = Sprite(self._cached_hints['window_hint'][1])
+        self.right_arrow = Sprite(self._cached_hints['window_hint'][3])
         self.refresh()
 
         self.delta_op = 0
@@ -44,10 +46,11 @@ class WindowConfig(window.WindowChoice):
         index = self.index
         super().on_click(mouse_pos)
         if index == self.index:
-            if mouse_pos.x > 192:
-                self.delta_op = 1
-            else:
-                self.delta_op = -1
+            if mouse_pos.x > 144:
+                if mouse_pos.x > 208:
+                    self.delta_op = 1
+                else:
+                    self.delta_op = -1
 
     def logic_handle(self, delta_time):
         if GameInput.trigger(Keyboard.Key.Left):
@@ -104,7 +107,7 @@ class WindowConfig(window.WindowChoice):
         for i in range(5):
             text, _ = self.items[i]
             text.set_position(Vector2f(0, self.cursor_height * i))
-            self.content.draw(text)
+            self.draw_on_content(text)
 
             text, _ = self.values[i]
             now_text = text_list[i]
@@ -112,6 +115,11 @@ class WindowConfig(window.WindowChoice):
                 text.set_text(now_text)
                 text.render()
             text.set_position(Vector2f(128, self.cursor_height * i))
-            self.content.draw(text)
+            self.draw_on_content(text)
+
+            self.left_arrow.set_position(Vector2f(128, self.cursor_height * i + 8))
+            self.right_arrow.set_position(Vector2f(self.size.x - 40, self.cursor_height * i + 8))
+            self.draw_on_content(self.left_arrow)
+            self.draw_on_content(self.right_arrow)
 
         self.content.display()

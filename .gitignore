@@ -8,3 +8,7 @@
 .DS_Store
 /mota_venv
 /lib
+/public
+/save
+mota.ini
+/build

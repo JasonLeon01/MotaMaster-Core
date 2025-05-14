@@ -9,7 +9,7 @@ from .viewport import *
 from .system import *
 from .inputs import *
 
-class Window(Viewport):
+class WindowRoot(Viewport):
     def __init__(self, rect: IntRect, asset: Image = None, repeat: bool = False):
         super().__init__(rect)
         self._asset = asset
@@ -267,7 +267,7 @@ class Window(Viewport):
     def centre(self):
         self.set_origin(self.size / 2.0)
 
-class WindowBase(Window):
+class GameWindow(WindowRoot):
     def mouse_in_rect(self) -> bool:
         mouse_pos = self.mouse_in_local()
         texture_size = self.get_texture().get_size()
@@ -295,6 +295,10 @@ class WindowBase(Window):
                 self.on_click(self.mouse_in_local())
         super().logic_handle(delta_time)
 
+    def draw_on_content(self, drawable: Drawable):
+        if self.content is not None:
+            self.content.draw(drawable, EText.text_render_state())
+
     @staticmethod
     def from_str(text: str, size: Vector2u, font: Font = None, font_size: Optional[int] = None, text_pos: int = 0):
         if font is None:
@@ -304,7 +308,7 @@ class WindowBase(Window):
             style_config.base_size = font_size
         return EText.from_str(text, font, size, style_config, text_pos)
 
-class WindowChoice(WindowBase):
+class WindowChoice(GameWindow):
     def __init__(self, rect: IntRect, cursor_height: int = 32, cursor_width = None, column: int = 1, asset: Image = None, repeat: bool = False):
         super().__init__(rect, asset, repeat)
         self.column = column
@@ -336,8 +340,8 @@ class WindowChoice(WindowBase):
     def on_click(self, mouse_pos: Vector2i):
         texture_size = self.get_texture().get_size()
         if (mouse_pos.x >= 16 and mouse_pos.x <= texture_size.x - 16 and mouse_pos.y >= 16 and mouse_pos.y <= texture_size.y - 16):
-            actual_y = mouse_pos.y - 16 - self._content_sprite.get_origin().y
-            actual_x = mouse_pos.x - 16 - self._content_sprite.get_origin().x
+            actual_y = mouse_pos.y - 16 + self._content_sprite.get_origin().y
+            actual_x = mouse_pos.x - 16 + self._content_sprite.get_origin().x
             row = actual_y // self.cursor_height
             col = actual_x // (self.get_cursor_width() + 32)
             index = int(row * self.column + col)
@@ -438,5 +442,5 @@ class WindowCommand(WindowChoice):
         self.content.clear(Color.transparent())
         for i, (text, _) in enumerate(self.items):
             text.set_position(Vector2f(0, i * 32))
-            self.content.draw(text, EText.text_render_state())
+            self.draw_on_content(text)
         self.content.display()

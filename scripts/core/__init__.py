@@ -1,5 +1,5 @@
 from . import graphics
-from. import inputs
+from . import inputs
 from . import method
 from . import scene
 from . import system

@@ -1,22 +1,38 @@
 # MotaMaster-Core
 
-[中文](README-CN.md) | [English](README.md)
+English | [中文](README-CN.md)
 
 ## Requirements & Installation
 - Python Version: 3.10.0
 - If you need to use Debug mode, install psutil.
-- This project uses [PySFML](https://github.com/JasonLeon01/PySFML), the Python bindings for SFML, for graphics and multimedia features.
+- This project uses [PySFBoost](https://github.com/JasonLeon01/PySFBoost), the Python bindings for SFML and some enhancing functions, for graphics and multimedia features.
 
-## Installing PysfBoost
+## Installing PySFBoost
 ```
-git clone https://github.com/JasonLeon01/PySFML.git
+git clone https://github.com/JasonLeon01/PySFBoost.git
+```
+
+## Running
+To run the project, you can use the following files:
+
+### If you are using Windows:
+- mota.exe: This is the main executable file for Windows, including python runtime. You don't have to install Python to run it.
+- mota.bat: This is a bat file for Windows. It's lighter but doesn't include Python runtime.
+
+### If you are using macOS:
+- mota.command: This is a command file for macOS. It doesn't include Python runtime.
+
+Before running it, you have to run the following command in your terminal to ensure the file is executable:
+
+```shell
+chmod +x mota.command
 ```
 
 ## Notes
 For debugging, run `launcher-debug.py`:
 
 ```
-python launcher.py
+python launcher-debug.py
 ```
 
 This script contains the same code as the executable launcher, allowing you to set breakpoints and debug efficiently.
@@ -29,5 +45,5 @@ This script contains the same code as the executable launcher, allowing you to s
 - This project uses the [HarmonyOS Sans](https://developer.huawei.com/images/download/general/HarmonyOS-Sans.zip) font. For license details, please refer to `assets/fonts/LICENSE.txt`.
 
 ## External libraries
-- [PySFML](https://github.com/JasonLeon01/PySFML) is under the [zlib/libpng license](https://opensource.org/licenses/Zlib).
+- [PySFBoost](https://github.com/JasonLeon01/PySFBoost) is under the [zlib/libpng license](https://opensource.org/licenses/Zlib).
 - [HarmonyOS Sans](https://developer.huawei.com/images/download/general/HarmonyOS-Sans.zip) is under the [HarmonyOS Sans Fonts License Agreement](assets/fonts/LICENSE.txt).
