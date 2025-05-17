@@ -43,6 +43,12 @@ class GraphicsMgr:
     def get_z_list(self):
         return self._z_list.copy()
 
+    def update(self, delta_time: float):
+        for drawables in self._drawables.copy().values():
+            for drawable in drawables[:]:
+                if hasattr(drawable, 'update'):
+                    drawable.update(delta_time)
+
     def display(self, target: RenderTarget, z: int = None):
         if z is None:
             z_list = self.get_z_list()

@@ -42,12 +42,12 @@ class WindowConfig(window.WindowChoice):
             System.set_scale(self.window_scale)
         super().render_handle(delta_time)
 
-    def on_click(self, mouse_pos: Vector2i):
+    def on_click(self):
         index = self.index
-        super().on_click(mouse_pos)
+        super().on_click()
         if index == self.index:
-            if mouse_pos.x > 144:
-                if mouse_pos.x > 208:
+            if self._mouse_pos.x > 144:
+                if self._mouse_pos.x > 208:
                     self.delta_op = 1
                 else:
                     self.delta_op = -1

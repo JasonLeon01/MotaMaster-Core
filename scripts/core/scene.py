@@ -68,6 +68,7 @@ class SceneBase:
 
     def render_handle(self, delta_time: float):
         from .graphics import Graphics
+        Graphics.graphics_mgr.update(delta_time)
         Graphics.animation_mgr.update(delta_time)
         Graphics.particle_mgr.update(delta_time)
         Graphics.update(delta_time)

@@ -48,13 +48,6 @@ class Scene(SceneBase):
         if Graphics.graphics_mgr.has(self.config_window):
             Graphics.graphics_mgr.remove(self.config_window)
 
-    def render_handle(self, delta_time):
-        if Graphics.graphics_mgr.has(self.command_window):
-            self.command_window.update(delta_time)
-        if Graphics.graphics_mgr.has(self.config_window):
-            self.config_window.update(delta_time)
-        super().render_handle(delta_time)
-
     def logic_handle(self, delta_time: float):
         if Graphics.graphics_mgr.has(self.config_window):
             if self.config_window.cancel():

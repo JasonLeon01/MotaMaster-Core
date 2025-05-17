@@ -268,13 +268,24 @@ class WindowRoot(Viewport):
         self.set_origin(self.size / 2.0)
 
 class GameWindow(WindowRoot):
-    def mouse_in_rect(self) -> bool:
-        mouse_pos = self.mouse_in_local()
+    def __init__(self, rect: IntRect, asset: Image = None, repeat: bool = False):
+        super().__init__(rect, asset, repeat)
+        self._mouse_pos: Vector2i = Vector2i(0, 0)
+
+    def mouse_in_window(self):
         texture_size = self.get_texture().get_size()
-        tex_x, tex_y = mouse_pos.x, mouse_pos.y
+        tex_x, tex_y = self._mouse_pos.x, self._mouse_pos.y
         return (tex_x >= 0 and tex_x < texture_size.x and tex_y >= 0 and tex_y < texture_size.y)
 
-    def mouse_in_local(self) -> Vector2i:
+    def mouse_in_content(self):
+        texture_size = self.get_texture().get_size()
+        return (self._mouse_pos.x >= 16 and self._mouse_pos.x <= texture_size.x - 16 and self._mouse_pos.y >= 16 and self._mouse_pos.y <= texture_size.y - 16)
+
+    def update(self, delta_time: float):
+        self._mouse_pos = self.mouse_in_local()
+        super().update(delta_time)
+
+    def mouse_in_local(self):
         mouse_x, mouse_y = Mouse.get_position(System.window)
         mouse_pos = Vector2i(mouse_x, mouse_y)
         mouse_pos = (mouse_pos.to_float()).to_int()
@@ -286,14 +297,22 @@ class GameWindow(WindowRoot):
         tex_y = (local_pos.y - texture_rect.top()) / texture_rect.height() * texture_size.y
         return Vector2i(tex_x, tex_y)
 
-    def on_click(self, mouse_pos: Vector2i):
+    def on_click(self):
+        pass
+
+    def on_hover(self, delta_time: float):
         pass
 
     def logic_handle(self, delta_time: float):
-        if self.mouse_in_rect():
+        if self.mouse_in_window():
             if GameInput.left_click():
-                self.on_click(self.mouse_in_local())
+                self.on_click()
         super().logic_handle(delta_time)
+
+    def render_handle(self, delta_time: float):
+        super().render_handle(delta_time)
+        if self.mouse_in_window():
+            self.on_hover(delta_time)
 
     def draw_on_content(self, drawable: Drawable):
         if self.content is not None:
@@ -318,7 +337,7 @@ class WindowChoice(GameWindow):
         self.items: List[Tuple[EText, Optional[Callable[..., Any]]]] = []
         self.active = True
 
-    def rows(self) -> int:
+    def rows(self):
         return int(math.ceil(1.0 * len(self.items) / self.column))
 
     def get_cursor_width(self):
@@ -337,11 +356,10 @@ class WindowChoice(GameWindow):
             y -= self._content_sprite.get_origin().y
         self.set_rect(IntRect(Vector2i(x, y), Vector2i(self.get_cursor_width(), self.cursor_height)))
 
-    def on_click(self, mouse_pos: Vector2i):
-        texture_size = self.get_texture().get_size()
-        if (mouse_pos.x >= 16 and mouse_pos.x <= texture_size.x - 16 and mouse_pos.y >= 16 and mouse_pos.y <= texture_size.y - 16):
-            actual_y = mouse_pos.y - 16 + self._content_sprite.get_origin().y
-            actual_x = mouse_pos.x - 16 + self._content_sprite.get_origin().x
+    def on_click(self):
+        if self.mouse_in_content():
+            actual_y = self._mouse_pos.y - 16 + self._content_sprite.get_origin().y
+            actual_x = self._mouse_pos.x - 16 + self._content_sprite.get_origin().x
             row = actual_y // self.cursor_height
             col = actual_x // (self.get_cursor_width() + 32)
             index = int(row * self.column + col)
@@ -353,6 +371,27 @@ class WindowChoice(GameWindow):
                     _, callback = self.items[self.index]
                     if callable(callback):
                         callback()
+
+    def on_hover(self, delta_time: float):
+        if self._rect is not None and self.active:
+            if self.mouse_in_content():
+                actual_y = self._mouse_pos.y - 16 + self._content_sprite.get_origin().y
+                actual_x = self._mouse_pos.x - 16 + self._content_sprite.get_origin().x
+                row = actual_y // self.cursor_height
+                col = actual_x // (self.get_cursor_width() + 32)
+                index = int(row * self.column + col)
+                if index < len(self.items):
+                    if index != self.index:
+                        origin_rect_opacity = self._rect_sprite.get_color().a
+                        hover_opacity = origin_rect_opacity / 2.5
+                        self._rect_sprite.set_color(Color(255, 255, 255, int(hover_opacity)))
+                        x = (index % self.column) * (self.get_cursor_width() + 32) + 16
+                        y = (index // self.column) * self.cursor_height + 16
+                        if self.content is not None:
+                            y -= self._content_sprite.get_origin().y
+                        self.set_rect(IntRect(Vector2i(x, y), Vector2i(self.get_cursor_width(), self.cursor_height)))
+                        self._canvas.draw(self._rect_sprite)
+                        self._rect_sprite.set_color(Color(255, 255, 255, int(origin_rect_opacity)))
 
     def confirm(self):
         if GameInput.trigger(Keyboard.Key.Enter) or GameInput.trigger(Keyboard.Key.Space):
@@ -390,7 +429,7 @@ class WindowChoice(GameWindow):
                     return
 
     def _wheel_response(self, delta_time: float):
-        if self.mouse_in_rect():
+        if self.mouse_in_window():
             if GameInput.wheel_up():
                 self.index = (self.index - 1 + len(self.items)) % len(self.items)
                 AudioMgr.play_sound(Config.cursor_se)
