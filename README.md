@@ -17,16 +17,9 @@ To run the project, you can use the following files:
 
 ### If you are using Windows:
 - mota.exe: This is the main executable file for Windows, including python runtime. You don't have to install Python to run it.
-- mota.bat: This is a bat file for Windows. It's lighter but doesn't include Python runtime.
 
 ### If you are using macOS:
-- mota.command: This is a command file for macOS. It doesn't include Python runtime.
-
-Before running it, you have to run the following command in your terminal to ensure the file is executable:
-
-```shell
-chmod +x mota.command
-```
+- mota: This is the main executable file for macOS.
 
 ## Notes
 For debugging, run `launcher-debug.py`:

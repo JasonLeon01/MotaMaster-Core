@@ -42,6 +42,7 @@ class Scene(SceneBase):
 
     def on_stop(self):
         Graphics.graphics_mgr.remove(self.sprite)
+        Graphics.graphics_mgr.remove(self.title)
         if Graphics.graphics_mgr.has(self.command_window):
             Graphics.graphics_mgr.remove(self.command_window)
         if Graphics.graphics_mgr.has(self.config_window):

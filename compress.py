@@ -158,7 +158,11 @@ def create_game_package(output_zip):
                 os.makedirs(os.path.dirname(dst), exist_ok=True)
                 shutil.copytree(folder, dst, ignore=ignore_patterns)
 
-        files_to_copy = ['main.py', 'mota.ini', 'mota.exe']
+        files_to_copy = ['main.py', 'mota.ini']
+        if os.name == "nt":
+            files_to_copy.append('mota.exe')
+        elif os.name == "posix":
+            files_to_copy.append('mota')
         for file in files_to_copy:
             if os.path.exists(file):
                 shutil.copy2(file, os.path.join(output_dir, file))

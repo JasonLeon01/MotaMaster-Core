@@ -16,17 +16,10 @@ git clone https://github.com/JasonLeon01/PySFBoost.git
 要运行本项目，你可以使用以下文件：
 
 ### 如果你使用 Windows：
-- mota.exe：这是 Windows 的主要可执行文件，包含 Python 运行环境。你无需安装 Python 即可运行。
-- mota.bat：这是 Windows 的bat文件。体积较小但不包含 Python 运行环境。
+- mota.exe：这是 Windows 的主要可执行文件，包含 Python 运行环境。你无需安装 Python 即可运行；
 
 ### 如果你使用 macOS：
-- mota.command：这是 macOS 的命令文件。不包含 Python 运行环境。
-
-在运行之前，你需要在终端中执行以下命令以确保文件可执行：
-
-```shell
-chmod +x mota.command
-```
+- mota：这是 macOS 的主要可执行文件。
 
 ## 注意事项
 若要进行调试，请运行 `launcher-debug.py`:
